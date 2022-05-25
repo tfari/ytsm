@@ -1,0 +1,4 @@
+requests
+bs4
+click>=8.0.1
+urwid
