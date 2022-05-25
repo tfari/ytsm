@@ -1,2 +1,4 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+# Do not count html test files as "project's language" (For Github)
+*.html linguist-vendored
