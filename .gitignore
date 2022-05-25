@@ -3,3 +3,4 @@ __pycache__/
 data/
 .mypy_cache/
 TODO.md
+__data_backup/
