@@ -10,8 +10,8 @@ from typing import Optional, Any
 import click
 
 from ytsm import ytsubmanager, repository, settings, logger, model
-from ytsm.uis.gui_tk import ytsm_gui
-from ytsm.uis.tui_urwid import ytsm_tui
+# from ytsm.uis.gui_tk import ytsm_gui
+# from ytsm.uis.tui_urwid import ytsm_tui
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = f'{SCRIPT_PATH}/data'
@@ -271,6 +271,7 @@ def find(term: str, videos: bool = False, description: bool = False, date: tuple
             video_list = YTSM.get_all_videos_by_date_range(date[0], date[1], channel_id=potential_channel_idx)
         else:  # (NAME)
             _success_echo(f'Found videos by name like: "{term}"{channel_specific_msg}')
+            video_list = YTSM.find_video_by_name(term, channel_id=potential_channel_idx)
 
         _echo_videos(sorted(video_list, key=lambda x: x.pubdate, reverse=True), show_channel_name=True)
 
@@ -359,16 +360,16 @@ def mark_watched(name: str, c: bool = False):
                           f'"{YTSM.get_channel(mark_video_watched_and_old.channel_id).name}" as watched.')
 
 
-@click.command('tui')
-def tui():
-    """ Open textual user interface (not for Windows). """
-    ytsm_tui.YTSMTui(ytsm=YTSM)
-
-
-@click.command('gui')
-def gui():
-    """ Open graphical user interface. """
-    ytsm_gui.App(ytsm=YTSM)
+# @click.command('tui')
+# def tui():
+#     """ Open textual user interface (not for Windows). """
+#     ytsm_tui.YTSMTui(ytsm=YTSM)
+#
+#
+# @click.command('gui')
+# def gui():
+#     """ Open graphical user interface. """
+#     ytsm_gui.App(ytsm=YTSM)
 
 #######################################################################################################################
 
@@ -385,6 +386,6 @@ if __name__ == '__main__':
     ytsm.add_command(video_detail)
     ytsm.add_command(watch_video)
     ytsm.add_command(mark_watched)
-    ytsm.add_command(tui)
-    ytsm.add_command(gui)
+    # ytsm.add_command(tui)
+    # ytsm.add_command(gui)
     ytsm()
