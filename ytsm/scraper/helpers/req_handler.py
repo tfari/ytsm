@@ -46,7 +46,7 @@ class RequestErrorData(object):
     Class that holds information on the kind of error checking that RequestHandler should do
     """
     def __init__(self, allow_errors=True, error_connection_max_tries=10,
-                 expected_status_codes=[200],
+                 expected_status_codes=None,
                  expected_validation_str=None,
                  expected_error_str=None):
         """
@@ -57,6 +57,8 @@ class RequestErrorData(object):
         :param expected_validation_str: string, a string to check against the response.text that validates the response
         :param expected_error_str: string, a string to check against the response.text that invalidates the response
         """
+        if not expected_status_codes:
+            expected_status_codes = [200]
 
         self.allow_errors = allow_errors
         self.error_connection_max_tries = error_connection_max_tries
@@ -109,7 +111,7 @@ class RequestHandler(object):
                                                cert=self.request_data.cert)
             return response_object
 
-        except requests.exceptions.MissingSchema or requests.exceptions.InvalidSchema or requests.exceptions.InvalidURL:
+        except (requests.exceptions.MissingSchema, requests.exceptions.InvalidSchema, requests.exceptions.InvalidURL):
             raise InvalidURL(url)
         except requests.exceptions.ConnectionError:
             raise ConnectivityError(url)
@@ -232,7 +234,6 @@ class ThreadedRequestHandler(object):
         :param n_pass: integer, takes count of recursive calls
         :return: None
         """
-        # start_time = time.time()
         self.errors = []
 
         for t in self.threads:
@@ -245,16 +246,13 @@ class ThreadedRequestHandler(object):
             self.responses += handler.responses
             self.errors += handler.errors
 
-        # print('[*] Pass n: %s, Responses: %s, Errors: %s, Took: %s' % (n_pass, len(self.responses), len(self.errors),
-        #                                                                (time.time() - start_time)))
-        if len(self.errors) > 0:
-            if n_pass < self.max_passes:
-                url_list = [err['url'] for err in self.errors]
-                self._init_threads(url_list)
+        if (len(self.errors) > 0) and (n_pass < self.max_passes):
+            url_list = [err['url'] for err in self.errors]
+            self._init_threads(url_list)
 
-                time.sleep(self.sleep_pass)
+            time.sleep(self.sleep_pass)
 
-                return self.do_threads(n_pass=n_pass + 1)
+            return self.do_threads(n_pass=n_pass + 1)
 
 
 # EXCEPTIONS
