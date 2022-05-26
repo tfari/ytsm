@@ -11,7 +11,7 @@ import click
 
 from ytsm import ytsubmanager, repository, settings, logger, model
 # from ytsm.uis.gui_tk import ytsm_gui
-# from ytsm.uis.tui_urwid import ytsm_tui
+from ytsm.uis.tui_urwid import ytsm_tui
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = f'{SCRIPT_PATH}/data'
@@ -54,6 +54,8 @@ def _echo_videos(video_list: list[model.Video], show_channel_name: bool = False)
         _echo(f'\t{video.sensible_pubdate()} - '
               f'{YTSM.get_channel(video.channel_id).name + " - " if show_channel_name else ""} {video.name}', color)
 
+    for video in video_list:  # TODO: Put on parallel thread? Why does this take so long?
+        YTSM.mark_video_as_old(video.idx)
 
 def _find_and_confirm(s_term: str, possibilities: list, obj_name: str) -> Optional[Any]:
     """ Find and confirm either a Channel or Video from a list of possibilities. If there is only one possibility,
@@ -360,12 +362,12 @@ def mark_watched(name: str, c: bool = False):
                           f'"{YTSM.get_channel(mark_video_watched_and_old.channel_id).name}" as watched.')
 
 
-# @click.command('tui')
-# def tui():
-#     """ Open textual user interface (not for Windows). """
-#     ytsm_tui.YTSMTui(ytsm=YTSM)
-#
-#
+@click.command('tui')
+def tui():
+    """ Open textual user interface (not for Windows). """
+    ytsm_tui.YTSMTui(ytsm=YTSM, settings=settings.Settings())
+
+
 # @click.command('gui')
 # def gui():
 #     """ Open graphical user interface. """
@@ -386,6 +388,6 @@ if __name__ == '__main__':
     ytsm.add_command(video_detail)
     ytsm.add_command(watch_video)
     ytsm.add_command(mark_watched)
-    # ytsm.add_command(tui)
+    ytsm.add_command(tui)
     # ytsm.add_command(gui)
     ytsm()
