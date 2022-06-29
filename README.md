@@ -1,5 +1,5 @@
 # ytsm
-***YTSM*** is a YT Subscription manager. Add, remove, and update any channels you want to follow, watch and keep a
+***YTSM*** is a YT Subscription manager. Add, remove, and update any channels you want to follow; watch and keep a
 log of the videos you have watched.
 
 ## Command-line usage
@@ -24,7 +24,8 @@ Channel/Video and prompt you for confirmation if there is more than one option.
     Update a channel, or all channels if -a is passed.
 * find TERM [--videos/-v | --description | --date | --channel-name]
     Find channels by name. If -v is passed, find videos by name, if -d is passed, it finds videos by description, 
-    if --date is passed, find videos by date range. If --channel-name is passed, only search within a specific channel. 
+    if --date is passed, find videos by date range. If --channel-name is passed, only search within a specific channel.
+    --date takes two dates in the form YYYY-MM-DD to search in between.
 * videos TERM [CHANNEL_NAME] [--new/-n | --unwatched/-u | --limit/-l INT | --no-limit/-nl]
     List the last 15 videos of CHANNEL_NAME (if not passed, it lists the last 15 videos of all channels).
     Using --new/-n or --unwatched/-u you can filter the videos to only new or unwatched respectively.

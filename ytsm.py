@@ -11,7 +11,7 @@ import click
 
 from ytsm import ytsubmanager, repository, settings, logger, model
 # from ytsm.uis.gui_tk import ytsm_gui
-from ytsm.uis.tui_urwid import ytsm_tui
+# from ytsm.uis.tui_urwid import ytsm_tui
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = f'{SCRIPT_PATH}/data'
@@ -248,7 +248,9 @@ def find(term: str, videos: bool = False, description: bool = False, date: tuple
          channel_name: str = None):
     """ Find channels by name. If -v is passed, find videos by name, if -d is passed, it finds videos by
     description, if --date is passed, find videos by date range. If --channel-name is passed, only search within
-    a specific channel. """
+    a specific channel.
+    --date takes two dates in the form YYYY-MM-DD to search in between.
+    """
     if not videos:
         if not term:
             _error_echo(f'Need a TERM when searching channels by name')  # Fatal
@@ -262,7 +264,6 @@ def find(term: str, videos: bool = False, description: bool = False, date: tuple
 
         potential_channel = __find_potential_channel(channel_name)
         potential_channel_idx = potential_channel.idx if potential_channel else None
-        video_list = []
 
         channel_specific_msg = f'{(", in channel: " + potential_channel.name) if potential_channel else ""}'
         if description:
@@ -362,10 +363,10 @@ def mark_watched(name: str, c: bool = False):
                           f'"{YTSM.get_channel(mark_video_watched_and_old.channel_id).name}" as watched.')
 
 
-@click.command('tui')
-def tui():
-    """ Open textual user interface (not for Windows). """
-    ytsm_tui.YTSMTui(ytsm=YTSM, settings=settings.Settings())
+# @click.command('tui')
+# def tui():
+#     """ Open textual user interface (not for Windows). """
+#     ytsm_tui.YTSMTui(ytsm=YTSM, settings=settings.Settings())
 
 
 # @click.command('gui')
@@ -388,6 +389,6 @@ if __name__ == '__main__':
     ytsm.add_command(video_detail)
     ytsm.add_command(watch_video)
     ytsm.add_command(mark_watched)
-    ytsm.add_command(tui)
+    # ytsm.add_command(tui)
     # ytsm.add_command(gui)
     ytsm()
