@@ -120,7 +120,7 @@ class SQLiteRepository(AbstractRepository):
     @staticmethod
     def create_db(db_path: str):
         """ Creates the DB on db_path """
-        # TODO: This should not be hardcoded here.
+        #TODO: This should not be hardcoded here.
         con = sqlite3.connect(db_path)
         cur = con.cursor()
         cur.execute(
