@@ -1,6 +1,5 @@
 """ Scrapping class and exceptions. """
 import re
-from typing import Optional
 
 from bs4 import BeautifulSoup  # type: ignore
 
@@ -158,10 +157,10 @@ class YTScraper:
         'description': str, 'thumbnail': str}]}
         """
         url_list = [self._rss_base_url % c for c in channel_ids]
-        xmls_to_url_names = self._get_urls_parallel(url_list)
+        xml_to_url_names = self._get_urls_parallel(url_list)
         result = {}
-        for key in xmls_to_url_names.keys():
-            result[key] = self._extract_video_information_from_xml(xmls_to_url_names[key], key)
+        for key in xml_to_url_names.keys():
+            result[key] = self._extract_video_information_from_xml(xml_to_url_names[key], key)
         return result
 
     def _extract_video_information_from_xml(self, xml: str, channel_id: str):
