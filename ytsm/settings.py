@@ -13,8 +13,8 @@ class Settings:
     success_msg_color: str = 'green'
     info_msg_color: str = 'yellow'
 
-    new_videos_color: str = 'green'
-    unwatched_videos_color: str = 'cyan'
+    new_videos_color: str = 'light green'
+    unwatched_videos_color: str = 'dark cyan'
     watched_videos_color: str = 'white'
 
     repo_type: str = 'sql'
