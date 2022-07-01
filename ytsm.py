@@ -86,21 +86,24 @@ def ytsm():
     https://github.com/tfari/ytsm
     """
     global LOGGER, YTSM
-    # 1 - If no data_backup information exists, create it
+    # 1 - If no data information exists, create it
     if not os.path.exists(DATA_PATH):
         print(f'[*] Creating data...')
         _factory_restore()
+    # 2 - If no sql_repo_filepath exists, create it
+    if not os.path.exists(SQL_REPO_FILEPATH):
+        _factory_restore(all=False, db=True)
 
-    # 2 - Load the logger
+    # 3 - Load the logger
     LOGGER = logger.Logger(logger.Logger.logger_setup('ytsm.log', LOG_FILEPATH, INFO))
 
-    # 3 - Load settings
+    # 4 - Load settings
     # SETTINGS = settings.load_settings(SETTINGS_FILEPATH, LOGGER)
 
-    # 4 - Load repo
+    # 5 - Load repo
     repo = repository.SQLiteRepository(db_path=SQL_REPO_FILEPATH)
 
-    # 5 - Load YTSM instance
+    # 6 - Load YTSM instance
     YTSM = ytsubmanager.YTSubManager(repository=repo)
 
 
