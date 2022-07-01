@@ -9,6 +9,12 @@ from ytsm.model import Channel, Video
 class AbstractRepository(metaclass=ABCMeta):
     """ Abstract repository class """
     @abstractmethod
+    def _amt_channel_videos(self, channel_id: str) -> int:
+        """ Returns the amount of videos in Channel with channel_id
+        :raises ObjectDoesNotExist: if there is no Channel with channel_id (0 videos)
+        """
+
+    @abstractmethod
     def add_channel(self, channel_id: str, channel_name: str, channel_uri: str) -> None:
         """
         Add a Channel to the database
@@ -41,6 +47,12 @@ class AbstractRepository(metaclass=ABCMeta):
         Add a Video to the database
         :raises ObjectDoesNotExist: if Channel with channel_id does not exist in the database
         :raises ObjectAlreadyExist: if there is already a Video with video_id
+        """
+
+    @abstractmethod
+    def _remove_video(self, video_id: str):
+        """
+        Remove a Video from the database
         """
 
     @abstractmethod
@@ -120,7 +132,7 @@ class SQLiteRepository(AbstractRepository):
     @staticmethod
     def create_db(db_path: str):
         """ Creates the DB on db_path """
-        #TODO: This should not be hardcoded here.
+        # TODO: This should not be hardcoded here.
         con = sqlite3.connect(db_path)
         cur = con.cursor()
         cur.execute(
@@ -151,6 +163,16 @@ class SQLiteRepository(AbstractRepository):
         )
         con.commit()
         con.close()
+
+    def _amt_channel_videos(self, channel_id: str) -> int:
+        """ Returns the amount of videos in Channel with channel_id
+        :raises ObjectDoesNotExist: if there is no Channel with channel_id (0 videos)
+        """
+        self.cur.execute('SELECT COUNT() FROM videos WHERE channel_id=?', (channel_id,))
+        found = self.cur.fetchone()[0]
+        if found == 0:
+            raise AbstractRepository.ObjectDoesNotExist(channel_id)
+        return found
 
     def add_channel(self, channel_id: str, channel_name: str, channel_url: str) -> None:
         """
@@ -195,10 +217,11 @@ class SQLiteRepository(AbstractRepository):
                   video_description: str, video_thumbnail: str, video_new: bool, video_watched: bool) -> None:
         """
         Add a Video to the database
-        # TODO: Do we want to add a limit for the Video amount to hold in the DB for each channel_id?
         :raises ObjectDoesNotExist: if Channel with channel_id does not exist in the database
         :raises ObjectAlreadyExist: if there is already a Video with video_id
         """
+        # TODO: Check if _amt_videos for channel_id is at the limit, if so, delete the oldest video before adding the
+        #  current one.
         try:
             self.cur.execute('INSERT into videos values(?, ?, ?, ?, ?, ?, ?, ?, ?)',
                              (video_id, channel_id, video_name, video_url, video_pubdate, video_description,
@@ -209,6 +232,13 @@ class SQLiteRepository(AbstractRepository):
                 raise self.ObjectAlreadyExists(video_id)
             elif "FOREIGN KEY" in str(e):
                 raise self.ObjectDoesNotExist(channel_id)
+
+    def _remove_video(self, video_id: str):
+        """
+        Remove a Video from the database
+        """
+        self.cur.execute('DELETE FROM videos WHERE id=?', (video_id,))
+        self.con.commit()
 
     def get_video(self, video_id: str) -> Video:
         """
