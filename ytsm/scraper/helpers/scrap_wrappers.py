@@ -60,7 +60,7 @@ class ScrapWrapper(object):
         Wraps bulk threaded posts with a single payload.
 
         :param query_list: list, strs with urls to query
-        :param data: str, __data_backup to pass through
+        :param data: str, data to pass through
         :param allow_errors: bool, should scraping allow errors, default to True
         :param n_threads: int, number of threads to use
         :param n_passes: int, number of passes to do when there are errors
