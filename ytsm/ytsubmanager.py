@@ -27,12 +27,12 @@ class YTSubManager:
         try:
             channel_id = self.scraper.get_channel_id_from_url(url)
         except self.scraper.YTScraperError as e:
-            raise self.ScraperError(f'Error getting channel id: {str(type(e))} - {str(e)}')
+            raise self.ScraperError(f'Error getting channel id: {e.__class__.__name__} - "{str(e)}"')
 
         # 2 - Check if channel already exists
         try:
             self.get_channel(channel_id)  # If it doesn't exist it should raise ChannelDoesNotExist
-            raise self.ChannelAlreadyExists(channel_id)
+            raise self.ChannelAlreadyExists(f'Channel already exists: {self.get_channel(channel_id).name}')
         except self.ChannelDoesNotExist:
             pass
 
