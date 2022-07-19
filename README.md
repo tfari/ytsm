@@ -49,6 +49,7 @@ Channel/Video and prompt you for confirmation if there is more than one option.
 * bs4
 * click
 * urwid (for the tui, not available on Windows)
+* pillow (for the gui)
 
 ### Extra
 * notify-update (For usage of ***YTSM*** with chron or other scheduling of commands. It allows to use the system's 

@@ -1,4 +1,6 @@
-requests
-bs4
+requests~=2.27.1
+bs4~=0.0.1
 click>=8.0.1
-urwid
+urwid~=2.1.2
+Pillow~=9.1.0
+beautifulsoup4~=4.11.0
