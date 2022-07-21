@@ -22,8 +22,8 @@ Channel/Video and prompt you for confirmation if there is more than one option.
     Remove a channel by its name.
 * update NAME [-a]
     Update a channel, or all channels if -a is passed.
-* visit CHANNEL_NAME
-    Visit a Channel's site. [TODO]
+* visit NAME
+    Visit a Channel's YTSM page. [TODO]
 * find TERM [--videos/-v | --description | --date | --channel-name]
     Find channels by name. If -v is passed, find videos by name, if -d is passed, it finds videos by description, 
     if --date is passed, find videos by date range. If --channel-name is passed, only search within a specific channel.
@@ -55,7 +55,7 @@ Channel/Video and prompt you for confirmation if there is more than one option.
 
 ### Extra
 * notify-update (For usage of ***YTSM*** with chron or other scheduling of commands. It allows to use the system's 
-  notification tray for notifying when there are new Videos
+  notification tray for notifying when there are new Videos)
   * https://vaskovsky.net/notify-send/
   * https://vaskovsky.net/notify-send/linux.html
 

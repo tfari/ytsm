@@ -54,7 +54,7 @@ def _echo_videos(video_list: list[model.Video], show_channel_name: bool = False)
         _echo(f'\t{video.sensible_pubdate()} - '
               f'{YTSM.get_channel(video.channel_id).name + " - " if show_channel_name else ""} {video.name}', color)
 
-    for video in video_list:  # TODO: Put on parallel thread? Why does this take so long?
+    for video in video_list:  # TODO: Put on parallel thread? Why does this take so long? Because of .commit()
         YTSM.mark_video_as_old(video.idx)
 
 def _find_and_confirm(s_term: str, possibilities: list, obj_name: str) -> Optional[Any]:
@@ -241,6 +241,14 @@ def update_channel(name: str, a: bool) -> None:
             else:
                 _success_echo(f'Updated channel: {updating_channel.name} and found {n_videos} new videos.')
 
+@click.command('visit')
+@click.argument('NAME', type=str)
+def visit_channel(name: str):
+    """ Visit a Channel's YTSM page """
+    visiting_channel: Optional[model.Channel] = _find_and_confirm(name, YTSM.find_channels(name), 'channels')
+    if visiting_channel:
+        webbrowser.open(f'https://www.youtube.com/channel/{visiting_channel.idx}')
+
 @click.command('find')
 @click.argument('TERM', required=False)
 @click.option('-v', '--videos', is_flag=True, help='Find in videos instead')
@@ -387,6 +395,7 @@ if __name__ == '__main__':
     ytsm.add_command(add_channel)
     ytsm.add_command(remove_channel)
     ytsm.add_command(update_channel)
+    ytsm.add_command(visit_channel)
     ytsm.add_command(find)
     ytsm.add_command(list_videos)
     ytsm.add_command(video_detail)
