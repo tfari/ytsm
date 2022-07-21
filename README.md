@@ -22,6 +22,8 @@ Channel/Video and prompt you for confirmation if there is more than one option.
     Remove a channel by its name.
 * update NAME [-a]
     Update a channel, or all channels if -a is passed.
+* visit CHANNEL_NAME
+    Visit a Channel's site. [TODO]
 * find TERM [--videos/-v | --description | --date | --channel-name]
     Find channels by name. If -v is passed, find videos by name, if -d is passed, it finds videos by description, 
     if --date is passed, find videos by date range. If --channel-name is passed, only search within a specific channel.
