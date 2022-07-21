@@ -229,15 +229,13 @@ class YTSubManager:
         specific Channel """
         return self.repository.get_all_videos_by_date_range(date_min, date_max, channel_id=channel_id)
 
-    def _get_amt_videos(self, channel_id: str) -> int:
+    def get_amt_videos(self, channel_id: str) -> tuple[int, int, int]:
         """
-        Return the number of videos belonging to Channel with channel_id
-        :raises ChannelDoesNotExist if channel_id does not exist (0 videos)
+        Return a tuple of the following counts for Channel with channel_id: (all videos, new videos, unwatched videos)
         """
-        try:
-            return self.repository._amt_channel_videos(channel_id=channel_id)
-        except AbstractRepository.ObjectDoesNotExist:
-            raise self.ChannelDoesNotExist(channel_id)
+        return (self.repository.amt_channel_videos(channel_id=channel_id),
+                self.repository.amt_channel_videos(channel_id=channel_id, video_type='new'),
+                self.repository.amt_channel_videos(channel_id=channel_id, video_type='unwatched'))
 
     def _remove_video(self, video_id: str) -> None:
         """

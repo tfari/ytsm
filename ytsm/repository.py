@@ -9,9 +9,9 @@ from ytsm.model import Channel, Video
 class AbstractRepository(metaclass=ABCMeta):
     """ Abstract repository class """
     @abstractmethod
-    def _amt_channel_videos(self, channel_id: str) -> int:
-        """ Returns the amount of videos in Channel with channel_id
-        :raises ObjectDoesNotExist: if there is no Channel with channel_id (0 videos)
+    def amt_channel_videos(self, channel_id: str, video_type: str = 'all') -> int:
+        """
+        Returns the amount of videos in Channel with channel_id, specified by video_type = 'all', 'new', 'unwatched'
         """
 
     @abstractmethod
@@ -164,14 +164,14 @@ class SQLiteRepository(AbstractRepository):
         con.commit()
         con.close()
 
-    def _amt_channel_videos(self, channel_id: str) -> int:
-        """ Returns the amount of videos in Channel with channel_id
-        :raises ObjectDoesNotExist: if there is no Channel with channel_id (0 videos)
-        """
-        self.cur.execute('SELECT COUNT() FROM videos WHERE channel_id=?', (channel_id,))
+    def amt_channel_videos(self, channel_id: str, video_type: str = 'all') -> int:
+        """ Returns the amount of videos in Channel with channel_id, specified by video_type = 'all', 'new',
+        'unwatched' """
+        curs = {'all': 'SELECT COUNT() FROM videos WHERE channel_id=?',
+                'new': 'SELECT COUNT() FROM videos WHERE channel_id=? AND new=TRUE',
+                'unwatched': 'SELECT COUNT() FROM videos WHERE channel_id=? AND watched=FALSE'}
+        self.cur.execute(curs[video_type], (channel_id,))
         found = self.cur.fetchone()[0]
-        if found == 0:
-            raise AbstractRepository.ObjectDoesNotExist(channel_id)
         return found
 
     def add_channel(self, channel_id: str, channel_name: str, channel_url: str) -> None:

@@ -469,16 +469,17 @@ class TestYTSubManager(TestCase):
         self.assertEqual([], self.ytsm.get_all_videos_by_date_range('22-02-03', '22-02-05'))
         self.assertEqual([], self.ytsm.get_all_videos_by_date_range('22-02-01', '22-02-03', channel_id='666'))
 
-    def test__get_amt_videos(self):
+    def test_get_amt_videos(self):
         self.ytsm._add_channel('test', 'Name', 'URL')
         self.ytsm._add_channel('test2', 'Name', 'URL')
         self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-02', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test3', 'test', 'Name', 'Url', '22-02-03', 'Desc', 'Thumbnail')
-        self.assertEqual(self.ytsm._get_amt_videos(channel_id='test'), 3)
-
-    def test__get_amt_videos_raises_ChannelDoesNotExist(self):
-        self.assertRaises(self.ytsm.ChannelDoesNotExist, self.ytsm._get_amt_videos, '666')
+        self.ytsm.mark_video_as_old('test3')
+        self.ytsm.mark_video_as_old('test2')
+        self.ytsm.mark_video_as_watched('test3')
+        self.assertEqual((3, 1, 2), self.ytsm.get_amt_videos(channel_id='test'))
+        self.assertEqual((0, 0, 0), self.ytsm.get_amt_videos(channel_id='666'))
 
     def test__remove_video(self):
         self.ytsm._add_channel('test', 'Name', 'URL')

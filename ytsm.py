@@ -41,11 +41,9 @@ def _echo(msg: str, fg_color: str = 'white'):
 def _echo_channels(channel_list: list[model.Channel]):
     """ Echo a list of channels """
     for c in channel_list:
-        videos = YTSM.get_all_videos(channel_id=c.idx)
-        new = sum([1 for v in videos if v.new])
-        unwatched = sum([1 for v in videos if not v.watched])
+        total, new, unwatched = YTSM.get_amt_videos(channel_id=c.idx)
         color = 'green' if new else 'blue' if unwatched else 'white'
-        _echo(f'\t{c.name} - New: {new} / Unwatched: {unwatched} / Total: {len(videos)}', color)
+        _echo(f'\t{c.name} - New: {new} / Unwatched: {unwatched} / Total: {total}', color)
 
 def _echo_videos(video_list: list[model.Video], show_channel_name: bool = False):
     """ Echo a list of videos """
