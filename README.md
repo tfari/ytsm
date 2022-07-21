@@ -64,7 +64,7 @@ Channel/Video and prompt you for confirmation if there is more than one option.
 _NOTICE_: ***YTSM*** uses YT's rss feed endpoint, which is known to be down from time to time, so it is possible to 
 experience temporal 404 errors when attempting to update channels.
 
-### For ytsm_gui.py on fedora
+### For GUI on fedora
 On error: 
 ```
 X Error of failed request:  BadLength (poly request too large or internal Xlib length error)
