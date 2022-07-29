@@ -108,17 +108,17 @@ def ytsm():
     if not os.path.exists(SETTINGS_FILEPATH):
         _factory_restore(all=False, setts=True)
 
-    # 3 - Load the logger
+    # 4 - Load the logger
     LOGGER = logger.Logger(logger.Logger.logger_setup('ytsm.log', LOG_FILEPATH, INFO))
 
-    # 4 - Load settings
+    # 5 - Load settings
     SETTINGS.set_path(SETTINGS_FILEPATH)
     SETTINGS.load_settings()
 
-    # 5 - Load repo
+    # 6 - Load repo
     repo = repository.SQLiteRepository(db_path=SQL_REPO_FILEPATH)
 
-    # 6 - Load YTSM instance
+    # 7 - Load YTSM instance
     YTSM = ytsubmanager.YTSubManager(repository=repo)
 
 
