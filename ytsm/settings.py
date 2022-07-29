@@ -5,6 +5,8 @@ from collections.abc import Mapping
 from typing import Union
 
 NEW_VIDEO, UNWATCHED_VIDEO, OLD_VIDEO = 'NEW', 'UNWATCHED', 'OLD'
+CLI_COLORS = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', 'bright_black', 'bright_red',
+              'bright_green', 'bright_yellow', 'bright_blue', 'bright_magenta', 'bright_cyan', 'bright_white']
 
 @dataclasses.dataclass
 class GUIColorScheme(Mapping):
@@ -60,22 +62,24 @@ class GUISettings:
     fontscheme: Union[GUIFontScheme, dict] = GUIFontScheme()
     scheduled_update_activated: bool = False
     scheduled_update_minutes: int = 15
+    window_on_top: bool = True
 
     def __post_init__(self):
         self.colorscheme = GUIColorScheme(**self.colorscheme)
         self.fontscheme = GUIFontScheme(**self.fontscheme)
 
-    def __dict__(self):
+    def to_json(self):
+        """ Transform class to JSON serializable dict """
+        # Transform dataclasses to dict, and add the normal key-value pairs
         return {'colorscheme': self.colorscheme.__dict__,
-                'fontscheme': self.fontscheme.__dict__,
-                'background_update_activated': self.scheduled_update_activated,
-                'background_update_minutes': self.scheduled_update_minutes}
+                'fontscheme': self.fontscheme.__dict__} | {k: self.__dict__[k] for k in self.__dict__.keys() if k not in
+                                                           ('colorscheme', 'fontscheme')}
 
 
 @dataclasses.dataclass
 class CLISettings:
     """ Dataclass for holding all CLI settings """
-    foreground_error: str = 'bright red'
+    foreground_error: str = 'bright_red'
     foreground_success: str = 'yellow'
     foreground_normal: str = 'white'
 
@@ -109,7 +113,7 @@ class Settings:
     def save_settings(self,):
         """ Save settings """
         if self.path:
-            json_me = {'gui_settings': self.gui_settings.__dict__(),
+            json_me = {'gui_settings': self.gui_settings.to_json(),
                        'cli_settings': self.cli_settings.__dict__}
 
             with open(self.path, 'w', encoding='utf-8') as w_file:
@@ -127,6 +131,9 @@ class Settings:
 
         elif restore_type == GUISettings:
             self.gui_settings = GUISettings()
+            self.save_settings()
+        elif restore_type == CLISettings:
+            self.cli_settings = CLISettings()
             self.save_settings()
 
     class SettingsHasNoPath(Exception):
