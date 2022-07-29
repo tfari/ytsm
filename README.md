@@ -52,6 +52,7 @@ Channel/Video and prompt you for confirmation if there is more than one option.
 * click
 * urwid (for the tui, not available on Windows)
 * pillow (for the gui)
+* colorama (windows ansi cli coloring)
 
 ### Extra
 * notify-update (For usage of ***YTSM*** with chron or other scheduling of commands. It allows to use the system's 
