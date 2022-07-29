@@ -58,8 +58,8 @@ class GUISettings:
     """ Dataclass for holding all GUI Settings """
     colorscheme: Union[GUIColorScheme, dict] = GUIColorScheme()
     fontscheme: Union[GUIFontScheme, dict] = GUIFontScheme()
-    background_update_activated: bool = False
-    background_update_minutes: int = 15
+    scheduled_update_activated: bool = False
+    scheduled_update_minutes: int = 15
 
     def __post_init__(self):
         self.colorscheme = GUIColorScheme(**self.colorscheme)
@@ -68,8 +68,8 @@ class GUISettings:
     def __dict__(self):
         return {'colorscheme': self.colorscheme.__dict__,
                 'fontscheme': self.fontscheme.__dict__,
-                'background_update_activated': self.background_update_activated,
-                'background_update_minutes': self.background_update_minutes}
+                'background_update_activated': self.scheduled_update_activated,
+                'background_update_minutes': self.scheduled_update_minutes}
 
 
 @dataclasses.dataclass
