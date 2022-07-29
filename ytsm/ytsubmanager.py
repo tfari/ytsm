@@ -14,7 +14,7 @@ class YTSubManager:
 
     def add_channel(self, url: str) -> str:
         """
-        Add a new channel via its URL, accepted URLs are /channel urls, /watch urls, and /user urls
+        Add a new channel via its URL, accepted URLs are /channel, /watch , /user and /c urls
 
         :raises ScraperError: if Scrapper has any error
         :raises ChannelAlreadyExists: if Channel with channel_id already exists in the database
