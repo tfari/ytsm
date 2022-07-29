@@ -20,40 +20,50 @@ LOG_FILEPATH = f'{DATA_PATH}/log.log'
 SETTINGS_FILEPATH = f'{DATA_PATH}/settings.json'
 SQL_REPO_FILEPATH = f'{DATA_PATH}/ytsm'
 
+SETTINGS: settings.Settings = settings.SETTINGS
 LOGGER: logger.Logger
 YTSM: ytsubmanager.YTSubManager
 
 
 def _error_echo(err_msg: str, fatal: bool = True):
     """ Echo for errors, if fatal, exit application. Red foreground color."""
-    click.secho(f'[!] {err_msg}', fg='red')
+    click.secho(f'[!] {err_msg}', fg=SETTINGS.cli_settings.foreground_error)
     if fatal:
         sys.exit(1)
 
+
 def _success_echo(msg: str):
     """ Echo for successful operations. Yellow foreground color. """
-    click.secho(f'[*] {msg}', fg='yellow')
+    click.secho(f'[*] {msg}', fg=SETTINGS.cli_settings.foreground_success)
 
-def _echo(msg: str, fg_color: str = 'white'):
+
+def _echo(msg: str, fg_color: str = SETTINGS.cli_settings.foreground_normal):
     """ Normal echo, white foreground color by default. """
     click.secho(msg, fg=fg_color)
+
 
 def _echo_channels(channel_list: list[model.Channel]):
     """ Echo a list of channels """
     for c in channel_list:
         total, new, unwatched = YTSM.get_amt_videos(channel_id=c.idx)
-        color = 'green' if new else 'blue' if unwatched else 'white'
+        color = SETTINGS.cli_settings.foreground_new_video if new \
+            else SETTINGS.cli_settings.foreground_unwatched_video \
+            if unwatched else SETTINGS.cli_settings.foreground_old_video
         _echo(f'\t{c.name} - New: {new} / Unwatched: {unwatched} / Total: {total}', color)
+
 
 def _echo_videos(video_list: list[model.Video], show_channel_name: bool = False):
     """ Echo a list of videos """
     for video in video_list:
-        color = 'green' if video.new else 'blue' if not video.watched else 'white'
+        color = SETTINGS.cli_settings.foreground_new_video if video.new \
+            else SETTINGS.cli_settings.foreground_unwatched_video \
+            if not video.watched else SETTINGS.cli_settings.foreground_old_video
         _echo(f'\t{video.sensible_pubdate()} - '
               f'{YTSM.get_channel(video.channel_id).name + " - " if show_channel_name else ""} {video.name}', color)
 
     for video in video_list:  # TODO: Put on parallel thread? Why does this take so long? Because of .commit()
         YTSM.mark_video_as_old(video.idx)
+
 
 def _find_and_confirm(s_term: str, possibilities: list, obj_name: str) -> Optional[Any]:
     """ Find and confirm either a Channel or Video from a list of possibilities. If there is only one possibility,
@@ -76,6 +86,7 @@ def _find_and_confirm(s_term: str, possibilities: list, obj_name: str) -> Option
 
     return confirmed_element
 
+
 @click.group()
 def ytsm():
     """ YTSM is a YT Subscription manager. Add, remove, and update any channels you want to follow, watch and keep a
@@ -88,15 +99,21 @@ def ytsm():
     if not os.path.exists(DATA_PATH):
         print(f'[*] Creating data...')
         _factory_restore()
-    # 2 - If no sql_repo_filepath exists, create it
+
+    # 2 - If no SQL_REPO_FILEPATH exists, create it
     if not os.path.exists(SQL_REPO_FILEPATH):
         _factory_restore(all=False, db=True)
+
+    # 3 - If no SETTINGS_FILEPATH exists, create it
+    if not os.path.exists(SETTINGS_FILEPATH):
+        _factory_restore(all=False, setts=True)
 
     # 3 - Load the logger
     LOGGER = logger.Logger(logger.Logger.logger_setup('ytsm.log', LOG_FILEPATH, INFO))
 
     # 4 - Load settings
-    # SETTINGS = settings.load_settings(SETTINGS_FILEPATH, LOGGER)
+    SETTINGS.set_path(SETTINGS_FILEPATH)
+    SETTINGS.load_settings()
 
     # 5 - Load repo
     repo = repository.SQLiteRepository(db_path=SQL_REPO_FILEPATH)
@@ -114,6 +131,7 @@ def factory_restore(all: bool = True, setts: bool = False, db: bool = False) -> 
     Restore the data for the application to factory, either everything, or only the settings and/or db.
     """
     _factory_restore(all, setts, db)
+
 
 def _factory_restore(all: bool = True, setts: bool = False, db: bool = False) -> None:
     """
@@ -140,7 +158,9 @@ def _factory_restore(all: bool = True, setts: bool = False, db: bool = False) ->
             _success_echo(f'Removing old settings file...')
             os.remove(SETTINGS_FILEPATH)
         _success_echo(f'Creating new settings.json file at {SETTINGS_FILEPATH}...')
-        settings.save_settings(settings.Settings(), SETTINGS_FILEPATH)
+        SETTINGS.set_path(SETTINGS_FILEPATH)
+        SETTINGS.restore_settings()
+        # settings.save_settings(settings.Settings(), SETTINGS_FILEPATH)
 
     if db:
         if os.path.exists(SQL_REPO_FILEPATH):
@@ -148,6 +168,7 @@ def _factory_restore(all: bool = True, setts: bool = False, db: bool = False) ->
             os.remove(SQL_REPO_FILEPATH)
         _success_echo(f'Creating new db file at {SQL_REPO_FILEPATH}...')
         repository.SQLiteRepository.create_db(SQL_REPO_FILEPATH)
+
 
 @click.command('notify-update')
 def notify_update():
@@ -239,6 +260,7 @@ def update_channel(name: str, a: bool) -> None:
             else:
                 _success_echo(f'Updated channel: {updating_channel.name} and found {n_videos} new videos.')
 
+
 @click.command('visit')
 @click.argument('NAME', type=str)
 def visit_channel(name: str):
@@ -246,6 +268,7 @@ def visit_channel(name: str):
     visiting_channel: Optional[model.Channel] = _find_and_confirm(name, YTSM.find_channels(name), 'channels')
     if visiting_channel:
         webbrowser.open(f'https://www.youtube.com/channel/{visiting_channel.idx}')
+
 
 @click.command('find')
 @click.argument('TERM', required=False)
@@ -286,6 +309,7 @@ def find(term: str, videos: bool = False, description: bool = False, date: tuple
             video_list = YTSM.find_video_by_name(term, channel_id=potential_channel_idx)
 
         _echo_videos(sorted(video_list, key=lambda x: x.pubdate, reverse=True), show_channel_name=True)
+
 
 def __find_potential_channel(channel_name: Optional[str]) -> Optional[model.Channel]:
     """ Helper: Attempts to find a potential channel for the find() command. """
@@ -328,6 +352,7 @@ def list_videos(channel_name: str, new: bool = False, unwatched: bool = False, l
     channel_msg_part = f' of channel "{viewing_channel.name}"' if viewing_channel else ''
     _success_echo(f'{limit_msg_part}{channel_msg_part}:')
     _echo_videos(videos, show_channel_name=True if not channel_idx else False)
+
 
 @click.command('detail')
 @click.argument('NAME', type=str)
@@ -381,7 +406,8 @@ def mark_watched(name: str, c: bool = False):
 # @click.command('gui')
 # def gui():
 #     """ Open graphical user interface. """
-#     ytsm_gui.App(ytsm=YTSM)
+#     ytsm_gui.YTSMGUI(ytsm=YTSM)
+
 
 #######################################################################################################################
 
