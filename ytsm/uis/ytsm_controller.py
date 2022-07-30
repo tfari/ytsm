@@ -81,11 +81,11 @@ class YTSMController:
         # Order
         return sorted(video_dto_list, key=lambda vdto: vdto.video.pubdate, reverse=True)
 
-    def set_channel_search_term(self, channel_search_terms: str):
+    def set_channel_search_term(self, channel_search_terms: str) -> None:
         """ Change the search terms for Channels in order to search by name when requesting data. """
         self.channel_search_term = channel_search_terms
 
-    def set_video_filter(self, new_video_filter: str):
+    def set_video_filter(self, new_video_filter: str) -> None:
         """ Change the Video filter in order to search by name when requesting data. """
         if new_video_filter not in (YTSMController.ALL, YTSMController.NEW, YTSMController.UNWATCHED):
             raise ValueError('Filter must be one of YTSMController.ALL, YTSM.Controller.NEW, '
@@ -93,11 +93,11 @@ class YTSMController:
         else:
             self.video_filter = new_video_filter
 
-    def set_video_search_term(self, video_search_terms: str):
+    def set_video_search_term(self, video_search_terms: str) -> None:
         """ Change the search terms for searching Videos when requesting data. """
         self.video_search_term = video_search_terms
 
-    def set_video_search_type(self, new_search_type: str):
+    def set_video_search_type(self, new_search_type: str) -> None:
         """ Change the search type for searching Videos when requesting data. """
         if new_search_type not in (YTSMController.NAME, YTSMController.DESC, YTSMController.DATE):
             raise ValueError('Filter must be one of YTSMController.NAME, YTSM.Controller.DESC, '
