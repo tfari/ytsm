@@ -1,4 +1,10 @@
-""" GLOBAL SETTINGS ACCESS """
+"""
+GLOBAL SETTINGS ACCESS
+Implements the following constants:
+SETTINGS -> A global Settings() class to use as a Singleton
+NEW_VIDEO, UNWATCHED_VIDEO, OLD_VIDEO -> Constants for video tagging
+CLI_COLORS -> A list of valid colorama colors for click usage
+"""
 import dataclasses
 import json
 from collections.abc import Mapping
@@ -63,12 +69,13 @@ class GUISettings:
     scheduled_update_activated: bool = False
     scheduled_update_minutes: int = 15
     window_on_top: bool = True
+    default_window_size: tuple[int, int] = (854, 700)
 
     def __post_init__(self):
         self.colorscheme = GUIColorScheme(**self.colorscheme)
         self.fontscheme = GUIFontScheme(**self.fontscheme)
 
-    def to_json(self):
+    def to_json(self) -> dict:
         """ Transform class to JSON serializable dict """
         # Transform dataclasses to dict, and add the normal key-value pairs
         return {'colorscheme': self.colorscheme.__dict__,
@@ -95,49 +102,76 @@ class Settings:
         self.gui_settings = GUISettings()
         self.cli_settings = CLISettings()
 
-    def set_path(self, path: str):
+    def __dict__(self):
+        return {'gui_settings': self.gui_settings.to_json(),
+                'cli_settings': self.cli_settings.__dict__}
+
+    def set_path(self, path: str) -> None:
         """ Set a path for Settings """
         self.path = path
 
-    def load_settings(self):
-        """ Load settings """
+    def load_settings(self) -> None:
+        """
+        Load settings
+        :raises SettingsHasNoPath: if path has not been set
+        :raises BrokenJSONFile: if the JSON file is broken
+        :raises ExtraKeys: if the JSON file has extra keys
+        """
         if self.path:
-            with open(self.path, 'r', encoding='utf-8') as r_file:
-                jsoned = json.load(r_file)
-
-            self.gui_settings = GUISettings(**jsoned['gui_settings']) if jsoned.get('gui_settings') else GUISettings()
-            self.cli_settings = CLISettings(**jsoned['cli_settings']) if jsoned.get('cli_settings') else CLISettings()
+            try:
+                with open(self.path, 'r', encoding='utf-8') as r_file:
+                    jsoned = json.load(r_file)
+            except json.decoder.JSONDecodeError as e:
+                raise Settings.BrokenJSONFile(f'Broken JSON file: {str(e)}')
+            else:
+                try:
+                    self.gui_settings = GUISettings(**jsoned['gui_settings']) \
+                        if jsoned.get('gui_settings') else GUISettings()
+                    self.cli_settings = CLISettings(**jsoned['cli_settings']) \
+                        if jsoned.get('cli_settings') else CLISettings()
+                except TypeError as te:
+                    raise Settings.ExtraKeys(f'Extra keys: {str(te)}')
         else:
             raise(Settings.SettingsHasNoPath())
 
     def save_settings(self,):
-        """ Save settings """
+        """
+        Save settings
+        :raises SettingsHasNoPath: if path has not been set
+        """
         if self.path:
-            json_me = {'gui_settings': self.gui_settings.to_json(),
-                       'cli_settings': self.cli_settings.__dict__}
-
             with open(self.path, 'w', encoding='utf-8') as w_file:
-                json.dump(json_me, w_file, indent=4)
+                json.dump(self.__dict__(), w_file, indent=4)
         else:
             raise(Settings.SettingsHasNoPath())
 
-    def restore_settings(self, *, restore_type=None):
-        """ Restore settings to defaults, if restore_type is one of (GUISettings,), restore only that type of
-        settings. """
+    def restore_settings(self, *, restore_type=None) -> None:
+        """
+        Restore settings to defaults, if restore_type is one of (GUISettings,), restore only that type of
+        settings.
+        :raises SettingsHasNoPath: if path has not been set.
+        :raises TypeError: if restore_type is not empty, and it is not one of: (GUISettings, CLISettings)
+        """
         if not restore_type:
             self.gui_settings = GUISettings()
             self.cli_settings = CLISettings()
-            self.save_settings()
-
         elif restore_type == GUISettings:
             self.gui_settings = GUISettings()
-            self.save_settings()
         elif restore_type == CLISettings:
             self.cli_settings = CLISettings()
-            self.save_settings()
+        else:
+            raise TypeError(restore_type)
+
+        self.save_settings()
 
     class SettingsHasNoPath(Exception):
         """ Settings has no associated path """
+
+    class BrokenJSONFile(Exception):
+        """ Settings file has broken JSON """
+
+    class ExtraKeys(Exception):
+        """ Settings file has strange keys """
 
 
 SETTINGS = Settings()
