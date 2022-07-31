@@ -86,9 +86,12 @@ class YTSMController:
         self.channel_search_term = channel_search_terms
 
     def set_video_filter(self, new_video_filter: str) -> None:
-        """ Change the Video filter in order to search by name when requesting data. """
+        """
+        Change the Video filter in order to search by name when requesting data.
+        :raises ValueError: if new_video_filter not YTSMController.ALL, YTSMController.NEW or YTRSMController.UNWATCHED
+        """
         if new_video_filter not in (YTSMController.ALL, YTSMController.NEW, YTSMController.UNWATCHED):
-            raise ValueError('Filter must be one of YTSMController.ALL, YTSM.Controller.NEW, '
+            raise ValueError('Filter must be one of YTSMController.ALL, YTSMController.NEW, '
                              'or YTSMController.UNWATCHED')
         else:
             self.video_filter = new_video_filter
@@ -98,7 +101,10 @@ class YTSMController:
         self.video_search_term = video_search_terms
 
     def set_video_search_type(self, new_search_type: str) -> None:
-        """ Change the search type for searching Videos when requesting data. """
+        """
+        Change the search type for searching Videos when requesting data.
+        :raises ValueError: if new_search_type not YTSMController.NAME, YTSMController.DESC or YTRSMController.DATE
+        """
         if new_search_type not in (YTSMController.NAME, YTSMController.DESC, YTSMController.DATE):
             raise ValueError('Filter must be one of YTSMController.NAME, YTSM.Controller.DESC, '
                              'or YTSMController.DATE')
