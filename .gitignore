@@ -4,3 +4,4 @@ data/
 .mypy_cache/
 TODO.md
 __data_backup/
+.coverage
