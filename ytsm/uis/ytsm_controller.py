@@ -155,7 +155,7 @@ class YTSMController:
 
     @staticmethod
     def visit_channel(channel_idx: str) -> None:
-        """ Visit a Channel's YTSM page """
+        """ Visit a Channel's YT page """
         webbrowser.open(f'https://youtube.com/channel/{channel_idx}')
 
     @dataclasses.dataclass
