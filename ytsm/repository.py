@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from typing import Optional
 
 from ytsm.model import Channel, Video
-
+from ytsm.settings import SETTINGS
 
 class AbstractRepository(metaclass=ABCMeta):
     """ Abstract repository class """
@@ -44,7 +44,7 @@ class AbstractRepository(metaclass=ABCMeta):
     def add_video(self, video_id: str, channel_id: str, video_name: str, video_url: str, video_pubdate: str,
                   video_description: str, video_thumbnail: str, video_new: bool, video_watched: bool) -> None:
         """
-        Add a Video to the database
+        Add a Video to the database, if we are on the SETTINGS limit for max videos, make place for it.
         :raises ObjectDoesNotExist: if Channel with channel_id does not exist in the database
         :raises ObjectAlreadyExist: if there is already a Video with video_id
         """
@@ -106,6 +106,12 @@ class AbstractRepository(metaclass=ABCMeta):
     def get_last_video_from_channel(self, channel_id: str) -> Optional[Video]:
         """
         Get last Video from Channel with channel_id, based on published date
+        :raises ObjectDoesNotExist: if Channel with channel_id does not exist in the database
+        """
+
+    def get_oldest_video_from_channel(self, channel_id: str) -> Optional[Video]:
+        """
+        Get the oldest Video from Channel with channel_id, based on published date
         :raises ObjectDoesNotExist: if Channel with channel_id does not exist in the database
         """
 
@@ -216,12 +222,18 @@ class SQLiteRepository(AbstractRepository):
     def add_video(self, video_id: str, channel_id: str, video_name: str, video_url: str, video_pubdate: str,
                   video_description: str, video_thumbnail: str, video_new: bool, video_watched: bool) -> None:
         """
-        Add a Video to the database
+        Add a Video to the database, if we are on the SETTINGS limit for max videos, make place for it.
+
         :raises ObjectDoesNotExist: if Channel with channel_id does not exist in the database
         :raises ObjectAlreadyExist: if there is already a Video with video_id
         """
-        # TODO: Check if _amt_videos for channel_id is at the limit, if so, delete the oldest video before adding the
-        #  current one.
+        # Delete older videos if appropriate
+        amt_videos = self.amt_channel_videos(channel_id)
+        if amt_videos == SETTINGS.advanced_settings.max_videos_per_channel:
+            v = self.get_oldest_video_from_channel(channel_id)
+            self._remove_video(v.idx)
+
+        # Insert new video
         try:
             self.cur.execute('INSERT into videos values(?, ?, ?, ?, ?, ?, ?, ?, ?)',
                              (video_id, channel_id, video_name, video_url, video_pubdate, video_description,
@@ -341,6 +353,18 @@ class SQLiteRepository(AbstractRepository):
         """
         self.get_channel(channel_id)
         self.cur.execute('SELECT * FROM videos WHERE channel_id=? ORDER BY pubdate DESC', (channel_id,))
+        found = self.cur.fetchone()
+        if not found:
+            return None
+        return Video(found[0], found[1], found[2], found[3], found[4], found[5], found[6], found[7], found[8])
+
+    def get_oldest_video_from_channel(self, channel_id: str) -> Optional[Video]:
+        """
+        Get the oldest Video from Channel with channel_id, based on published date
+        :raises ObjectDoesNotExist: if Channel with channel_id does not exist in the database
+        """
+        self.get_channel(channel_id)
+        self.cur.execute('SELECT * FROM videos WHERE channel_id=? ORDER BY pubdate ASC', (channel_id,))
         found = self.cur.fetchone()
         if not found:
             return None

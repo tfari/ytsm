@@ -3,7 +3,7 @@ from unittest import TestCase
 from ytsm.ytsubmanager import YTSubManager, YTScraper
 from ytsm.repository import SQLiteRepository
 from ytsm.model import Channel, Video
-
+from ytsm.settings import SETTINGS
 
 class TestYTSubManager(TestCase):
     @staticmethod
@@ -216,6 +216,27 @@ class TestYTSubManager(TestCase):
         self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.assertEqual(Video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail', True, False),
                          self.ytsm.get_video('test'))
+
+    def test__add_video_max_videos(self):
+        # Check older videos get deleted to make place for new ones when they reach the SETTINGS limit
+        SETTINGS.advanced_settings.max_videos_per_channel = 5
+        self.ytsm._add_channel('test', 'Name', 'URL')
+        self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-06', 'Desc', 'Thumbnail')  # Check its by pubdate
+        self.ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-02', 'Desc', 'Thumbnail')
+        self.ytsm._add_video('test3', 'test', 'Name', 'Url', '22-02-03', 'Desc', 'Thumbnail')
+        self.ytsm._add_video('test4', 'test', 'Name', 'Url', '22-02-04', 'Desc', 'Thumbnail')
+        self.ytsm._add_video('test5', 'test', 'Name', 'Url', '22-02-05', 'Desc', 'Thumbnail')
+
+        # When this is added, test2, the oldest, is deleted to make place for test6
+        self.ytsm._add_video('test6', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
+
+        self.assertEqual((5, 5, 5), self.ytsm.get_amt_videos(channel_id='test'))
+        self.assertEqual([Video('test', 'test', 'Name', 'Url', '22-02-06', 'Desc', 'Thumbnail', True, False),
+                          Video('test3', 'test', 'Name', 'Url', '22-02-03', 'Desc', 'Thumbnail', True, False),
+                          Video('test4', 'test', 'Name', 'Url', '22-02-04', 'Desc', 'Thumbnail', True, False),
+                          Video('test5', 'test', 'Name', 'Url', '22-02-05', 'Desc', 'Thumbnail', True, False),
+                          Video('test6', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail', True, False),
+                          ], self.ytsm.get_all_videos(channel_id='test'))
 
     def test__add_video_raises_ChannelDoesNotExist(self):
         self.assertRaises(YTSubManager.ChannelDoesNotExist, self.ytsm._add_video, 'test', 'test', 'Name', 'Url',

@@ -14,6 +14,10 @@ NEW_VIDEO, UNWATCHED_VIDEO, OLD_VIDEO = 'NEW', 'UNWATCHED', 'OLD'
 CLI_COLORS = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', 'bright_black', 'bright_red',
               'bright_green', 'bright_yellow', 'bright_blue', 'bright_magenta', 'bright_cyan', 'bright_white']
 
+TUI_COLORS = ['black', 'dark red', 'dark green', 'brown', 'dark blue', 'dark magenta', 'dark cyan', 'light gray',
+              'dark gray', 'light red', 'light green', 'yellow', 'light blue', 'light magenta', 'light cyan', 'white']
+
+
 @dataclasses.dataclass
 class GUIColorScheme(Mapping):
     """ Dataclass for holding GUI color scheme settings """
@@ -43,6 +47,7 @@ class GUIColorScheme(Mapping):
     def __len__(self):
         return len(self.__dict__)
 
+
 @dataclasses.dataclass
 class GUIFontScheme(Mapping):
     """ Dataclass for holding GUI font settings """
@@ -60,6 +65,7 @@ class GUIFontScheme(Mapping):
 
     def __len__(self):
         return len(self.__dict__)
+
 
 @dataclasses.dataclass
 class GUISettings:
@@ -94,17 +100,44 @@ class CLISettings:
     foreground_unwatched_video: str = 'cyan'
     foreground_new_video: str = 'bright_green'
 
+    def __post_init__(self):
+        """ Check all colors are in CLI_COLORS """
+        for key in self.__dict__:
+            if self.__dict__[key] not in CLI_COLORS:
+                raise Settings.InvalidSettingsValue(f'In CLISettings: "{key}": "{self.__dict__[key]}", '
+                                                    f'use one of these: {", ".join(CLI_COLORS)}')
+
+# @dataclasses.dataclass
+# class TUISettings:
+#     """ Dataclass for holding all TUI Settings """
+#     foreground_error: str = 'light red'
+#     foreground_prompt: str = 'yellow'
+#     foreground_info: str = 'light green'
+#
+#     foreground_old_video: str = 'white'
+#     foreground_unwatched_video: str = 'light cyan'
+#     foreground_new_video: str = 'light green'
+
+
+@dataclasses.dataclass
+class AdvancedSettings:
+    """ Dataclass for advanced Settings """
+    max_videos_per_channel: int = 100
+
 
 class Settings:
     """ All Settings """
+
     def __init__(self):
         self.path = None
         self.gui_settings = GUISettings()
         self.cli_settings = CLISettings()
+        self.advanced_settings = AdvancedSettings()
 
     def __dict__(self):
         return {'gui_settings': self.gui_settings.to_json(),
-                'cli_settings': self.cli_settings.__dict__}
+                'cli_settings': self.cli_settings.__dict__,
+                'advanced_settings': self.advanced_settings.__dict__}
 
     def set_path(self, path: str) -> None:
         """ Set a path for Settings """
@@ -116,25 +149,31 @@ class Settings:
         :raises SettingsHasNoPath: if path has not been set
         :raises BrokenJSONFile: if the JSON file is broken
         :raises ExtraKeys: if the JSON file has extra keys
+        :raises InvalidSettingsValue: if one of the values is invalid, ex: CLISettings not in CLI_COLORS
         """
-        if self.path:
-            try:
-                with open(self.path, 'r', encoding='utf-8') as r_file:
-                    jsoned = json.load(r_file)
-            except json.decoder.JSONDecodeError as e:
-                raise Settings.BrokenJSONFile(f'Broken JSON file: {str(e)}')
-            else:
-                try:
-                    self.gui_settings = GUISettings(**jsoned['gui_settings']) \
-                        if jsoned.get('gui_settings') else GUISettings()
-                    self.cli_settings = CLISettings(**jsoned['cli_settings']) \
-                        if jsoned.get('cli_settings') else CLISettings()
-                except TypeError as te:
-                    raise Settings.ExtraKeys(f'Extra keys: {str(te)}')
-        else:
-            raise(Settings.SettingsHasNoPath())
+        if not self.path:
+            raise (Settings.SettingsHasNoPath())
 
-    def save_settings(self,):
+        try:
+            with open(self.path, 'r', encoding='utf-8') as r_file:
+                jsoned = json.load(r_file)
+        except json.decoder.JSONDecodeError as e:
+            raise Settings.BrokenJSONFile(f'Broken JSON file: {str(e)}')
+        else:
+            try:
+                # Load settings by key if they exist, else go for factory
+                settings_map = {'gui_settings': GUISettings, 'cli_settings': CLISettings,
+                                'advanced_settings': AdvancedSettings}
+                for sett_key in settings_map:
+                    if jsoned.get(sett_key):
+                        setattr(self, sett_key, settings_map[sett_key](**jsoned[sett_key]))
+                    else:
+                        setattr(self, sett_key, settings_map[sett_key]())
+
+            except TypeError as te:
+                raise Settings.ExtraKeys(f'Extra keys: {str(te)}')
+
+    def save_settings(self, ):
         """
         Save settings
         :raises SettingsHasNoPath: if path has not been set
@@ -143,7 +182,7 @@ class Settings:
             with open(self.path, 'w', encoding='utf-8') as w_file:
                 json.dump(self.__dict__(), w_file, indent=4)
         else:
-            raise(Settings.SettingsHasNoPath())
+            raise (Settings.SettingsHasNoPath())
 
     def restore_settings(self, *, restore_type=None) -> None:
         """
@@ -155,10 +194,13 @@ class Settings:
         if not restore_type:
             self.gui_settings = GUISettings()
             self.cli_settings = CLISettings()
+            self.advanced_settings = AdvancedSettings()
         elif restore_type == GUISettings:
             self.gui_settings = GUISettings()
         elif restore_type == CLISettings:
             self.cli_settings = CLISettings()
+        elif restore_type == AdvancedSettings:
+            self.advanced_settings = AdvancedSettings()
         else:
             raise TypeError(restore_type)
 
@@ -172,6 +214,9 @@ class Settings:
 
     class ExtraKeys(Exception):
         """ Settings file has strange keys """
+
+    class InvalidSettingsValue(Exception):
+        """ Settings value is invalid """
 
 
 SETTINGS = Settings()

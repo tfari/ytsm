@@ -3,7 +3,7 @@ import os
 import json
 from unittest import TestCase, mock
 
-from ytsm.settings import Settings, GUISettings, GUIColorScheme, GUIFontScheme, CLISettings
+from ytsm.settings import Settings, GUISettings, GUIColorScheme, GUIFontScheme, CLISettings, AdvancedSettings
 
 class TestSettings(TestCase):
     def setUp(self) -> None:
@@ -87,30 +87,48 @@ class TestSettings(TestCase):
         # No type
         self.settings.gui_settings = None
         self.settings.cli_settings = None
+        self.settings.advanced_settings = None
         self.settings.restore_settings()
         mocked_func.assert_called()
         self.assertEqual(GUISettings(), self.settings.gui_settings)
         self.assertEqual(CLISettings(), self.settings.cli_settings)
+        self.assertEqual(AdvancedSettings(), self.settings.advanced_settings)
 
     @mock.patch("ytsm.settings.Settings.save_settings")
     def test_restore_settings_gui_settings(self, mocked_func):
         # GUISettings only
         self.settings.gui_settings = None
         self.settings.cli_settings = None
+        self.settings.advanced_settings = None
         self.settings.restore_settings(restore_type=GUISettings)
         mocked_func.assert_called()
         self.assertEqual(GUISettings(), self.settings.gui_settings)
         self.assertEqual(None, self.settings.cli_settings)
+        self.assertEqual(None, self.settings.advanced_settings)
 
     @mock.patch("ytsm.settings.Settings.save_settings")
     def test_restore_settings_cli_settings(self, mocked_func):
         # CLISettings only
         self.settings.gui_settings = None
         self.settings.cli_settings = None
+        self.settings.advanced_settings = None
         self.settings.restore_settings(restore_type=CLISettings)
         mocked_func.assert_called()
         self.assertEqual(None, self.settings.gui_settings)
         self.assertEqual(CLISettings(), self.settings.cli_settings)
+        self.assertEqual(None, self.settings.advanced_settings)
+
+    @mock.patch("ytsm.settings.Settings.save_settings")
+    def test_restore_settings_advanced_settings(self, mocked_func):
+        # AdvancedSettings only
+        self.settings.gui_settings = None
+        self.settings.cli_settings = None
+        self.settings.advanced_settings = None
+        self.settings.restore_settings(restore_type=AdvancedSettings)
+        mocked_func.assert_called()
+        self.assertEqual(None, self.settings.gui_settings)
+        self.assertEqual(None, self.settings.cli_settings)
+        self.assertEqual(AdvancedSettings(), self.settings.advanced_settings)
 
     def test_restore_settings_raises_TypeError(self):
         self.assertRaises(TypeError, self.settings.restore_settings, restore_type=int)
@@ -120,3 +138,10 @@ class TestGUISettings(TestCase):
         gs = GUISettings()
         expected = gs.__dict__ | {'colorscheme': GUIColorScheme().__dict__, 'fontscheme': GUIFontScheme().__dict__}
         self.assertEqual(expected, gs.to_json())
+
+class TestCLISettings(TestCase):
+    def test__post_init__raises_InvalidSettingsValue(self):
+        vals = {
+            'foreground_error': 'bad color'
+        }
+        self.assertRaises(Settings.InvalidSettingsValue, CLISettings, **vals)
