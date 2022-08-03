@@ -23,7 +23,8 @@ SQLITE_DB_CREATION_STATEMENTS = [
     CREATE TABLE channels (
             id   TEXT PRIMARY KEY NOT NULL,
             name TEXT NOT NULL,
-            url  TEXT NOT NULL
+            url  TEXT NOT NULL,
+            notify_on BOOLEAN NOT NULL
     );
     """,
 

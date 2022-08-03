@@ -243,6 +243,14 @@ class YTSubManager:
         """
         self.repository._remove_video(video_id)
 
+    def set_notify_on_status_false(self, channel_id: str):
+        """ Set Channel with channel_id to NOT notify on updates """
+        self.repository.set_channel_notify_on_status(channel_id, False)
+
+    def set_notify_on_status_true(self, channel_id: str):
+        """ Set Channel with channel_id to notify on updates """
+        self.repository.set_channel_notify_on_status(channel_id, True)
+
     class BaseYTSMError(Exception):
         """ Base class for YTSM errors """
 

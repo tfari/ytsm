@@ -116,6 +116,10 @@ class AbstractRepository(metaclass=ABCMeta):
         :raises ObjectDoesNotExist: if Channel with channel_id does not exist in the database
         """
 
+    @abstractmethod
+    def set_channel_notify_on_status(self, channel_id: str, notify_status: bool) -> None:
+        """ Set the Channel with channel_id's notify_on to notify_status """
+
     class BaseRepositoryError(Exception):
         """ Base class for Repository errors """
 
@@ -162,7 +166,7 @@ class SQLiteRepository(AbstractRepository):
         :raises ObjectAlreadyExist: if there is already a Channel with channel_id
         """
         try:
-            self.cur.execute('INSERT into channels values(?, ?, ?)', (channel_id, channel_name, channel_url))
+            self.cur.execute('INSERT into channels values(?, ?, ?, ?)', (channel_id, channel_name, channel_url, True))
             self.con.commit()
         except sqlite3.IntegrityError:
             raise self.ObjectAlreadyExists(channel_id)
@@ -176,7 +180,7 @@ class SQLiteRepository(AbstractRepository):
         found = self.cur.fetchone()
         if not found:
             raise self.ObjectDoesNotExist(channel_id)
-        return Channel(found[0], found[1], found[2])
+        return Channel(*found)
 
     def remove_channel(self, channel_id: str) -> None:
         """ Remove a Channel from the database """
@@ -187,13 +191,13 @@ class SQLiteRepository(AbstractRepository):
         """ Find Channels which names contain name_str, case-insensitive"""
         self.cur.execute('SELECT * FROM channels WHERE UPPER(name) LIKE ?', (f'%{name_str.upper()}%',))
         found = self.cur.fetchall()
-        return [Channel(f[0], f[1], f[2]) for f in found]
+        return [Channel(*f) for f in found]
 
     def get_all_channels(self) -> list[Channel]:
         """ Get all the Channels from the database """
         self.cur.execute('SELECT * FROM channels')
         found = self.cur.fetchall()
-        return [Channel(f[0], f[1], f[2]) for f in found]
+        return [Channel(*f) for f in found]
 
     def add_video(self, video_id: str, channel_id: str, video_name: str, video_url: str, video_pubdate: str,
                   video_description: str, video_thumbnail: str, video_new: bool, video_watched: bool) -> None:
@@ -237,7 +241,7 @@ class SQLiteRepository(AbstractRepository):
         found = self.cur.fetchone()
         if not found:
             raise self.ObjectDoesNotExist(video_id)
-        return Video(found[0], found[1], found[2], found[3], found[4], found[5], found[6], found[7], found[8])
+        return Video(*found)
 
     def find_video_by_key(self, find_str: str, *, desc: bool = False, channel_id: Optional[str] = None) -> list[Video]:
         """ Find Videos which names (or desc if desk is True) contains find_str, case-insensitive. Optionally look only
@@ -256,7 +260,7 @@ class SQLiteRepository(AbstractRepository):
                                  (f'%{find_str.upper()}%', channel_id))
 
         found = self.cur.fetchall()
-        return [Video(f[0], f[1], f[2], f[3], f[4], f[5], f[6], f[7], f[8]) for f in found]
+        return [Video(*f) for f in found]
 
     def get_all_videos(self, *, channel_id: Optional[str] = None) -> list[Video]:
         """ Get all the Videos from the database. Optionally look only inside a specific Channel """
@@ -266,7 +270,7 @@ class SQLiteRepository(AbstractRepository):
             self.cur.execute('SELECT * FROM videos WHERE channel_id=?', (channel_id,))
 
         found = self.cur.fetchall()
-        return [Video(f[0], f[1], f[2], f[3], f[4], f[5], f[6], f[7], f[8]) for f in found]
+        return [Video(*f) for f in found]
 
     def mark_video_as_old(self, video_id: str) -> None:
         """ Edit Video with video_id to new=False """
@@ -296,7 +300,7 @@ class SQLiteRepository(AbstractRepository):
             self.cur.execute('SELECT * FROM videos WHERE new=TRUE AND channel_id=?', (channel_id,))
 
         found = self.cur.fetchall()
-        return [Video(f[0], f[1], f[2], f[3], f[4], f[5], f[6], f[7], f[8]) for f in found]
+        return [Video(*f) for f in found]
 
     def get_all_unwatched_videos(self, *, channel_id: Optional[str] = None) -> list[Video]:
         """ Get all the Videos from the database that have watched=False. Optionally look only inside a specific
@@ -307,7 +311,7 @@ class SQLiteRepository(AbstractRepository):
             self.cur.execute('SELECT * FROM videos WHERE watched=FALSE AND channel_id=?', (channel_id,))
 
         found = self.cur.fetchall()
-        return [Video(f[0], f[1], f[2], f[3], f[4], f[5], f[6], f[7], f[8]) for f in found]
+        return [Video(*f) for f in found]
 
     def get_all_videos_by_date_range(self, date_min: str, date_max: str, *,
                                      channel_id: Optional[str] = None) -> list[Video]:
@@ -320,7 +324,7 @@ class SQLiteRepository(AbstractRepository):
                              (date_min, date_max, channel_id))
 
         found = self.cur.fetchall()
-        return [Video(f[0], f[1], f[2], f[3], f[4], f[5], f[6], f[7], f[8]) for f in found]
+        return [Video(*f) for f in found]
 
     def get_last_video_from_channel(self, channel_id: str) -> Optional[Video]:
         """
@@ -332,7 +336,7 @@ class SQLiteRepository(AbstractRepository):
         found = self.cur.fetchone()
         if not found:
             return None
-        return Video(found[0], found[1], found[2], found[3], found[4], found[5], found[6], found[7], found[8])
+        return Video(*found)
 
     def get_oldest_video_from_channel(self, channel_id: str) -> Optional[Video]:
         """
@@ -344,4 +348,9 @@ class SQLiteRepository(AbstractRepository):
         found = self.cur.fetchone()
         if not found:
             return None
-        return Video(found[0], found[1], found[2], found[3], found[4], found[5], found[6], found[7], found[8])
+        return Video(*found)
+
+    def set_channel_notify_on_status(self, channel_id: str, notify_status: bool) -> None:
+        """ Set the Channel with channel_id's notify_on to notify_status """
+        self.cur.execute('UPDATE channels SET notify_on=? WHERE id=?', (notify_status, channel_id,))
+        self.con.commit()

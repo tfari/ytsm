@@ -483,3 +483,14 @@ class TestYTSubManager(TestCase):
         self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm._remove_video('test')
         self.assertRaises(self.ytsm.VideoDoesNotExist, self.ytsm.get_video, 'test')
+
+    def test_set_notify_on_status_false(self):
+        self.ytsm._add_channel('test', 'Name', 'URL')
+        self.ytsm.set_notify_on_status_false('test')
+        self.assertEqual(False, self.ytsm.get_channel('test').notify_on)
+
+    def test_set_notify_on_status_true(self):
+        self.ytsm._add_channel('test', 'Name', 'URL')
+        self.ytsm.set_notify_on_status_false('test')
+        self.ytsm.set_notify_on_status_true('test')
+        self.assertEqual(True, self.ytsm.get_channel('test').notify_on)

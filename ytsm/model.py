@@ -7,6 +7,7 @@ class Channel:
     idx: str
     name: str
     url: str
+    notify_on: bool = True
 
 @dataclass
 class Video:

@@ -5,37 +5,15 @@ from ytsm.ytsubmanager import YTSubManager
 from ytsm.repository import SQLiteRepository
 from ytsm.uis.ytsm_controller import YTSMController
 
+from ytsm.settings import SQLITE_DB_CREATION_STATEMENTS
 
 class TestYTSMController(TestCase):
     def setUp(self) -> None:
         """ Set up the DB, YTSM  and YTSCM instances """
         repo = SQLiteRepository(db_path=':memory:')
-        repo.cur.execute(
-            """
-            CREATE TABLE channels (
-                    id   TEXT PRIMARY KEY NOT NULL,
-                    name TEXT NOT NULL,
-                    url  TEXT NOT NULL
-            );
-            """
-        )
-        repo.cur.execute(
-            """
-            CREATE TABLE videos (
-                id          TEXT     PRIMARY KEY ON CONFLICT FAIL
-                                     NOT NULL,
-                channel_id  TEXT     REFERENCES channels (id) ON DELETE CASCADE
-                                     NOT NULL,
-                name        TEXT     NOT NULL,
-                url         TEXT     NOT NULL,
-                pubdate     DATETIME NOT NULL,
-                description TEXT     NOT NULL,
-                thumbnail   TEXT     NOT NULL,
-                new         BOOLEAN  NOT NULL,
-                watched     BOOLEAN  NOT NULL
-            );
-            """
-        )
+        for sqlite_statement in SQLITE_DB_CREATION_STATEMENTS:
+            repo.cur.execute(sqlite_statement)
+
         self._ytsm = YTSubManager(repository=repo)
 
         self.ytsmc = YTSMController(self._ytsm)
