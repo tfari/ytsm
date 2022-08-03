@@ -3,7 +3,7 @@ from unittest import TestCase
 from ytsm.ytsubmanager import YTSubManager, YTScraper
 from ytsm.repository import SQLiteRepository
 from ytsm.model import Channel, Video
-from ytsm.settings import SETTINGS
+from ytsm.settings import SETTINGS, SQLITE_DB_CREATION_STATEMENTS
 
 class TestYTSubManager(TestCase):
     @staticmethod
@@ -14,32 +14,8 @@ class TestYTSubManager(TestCase):
     def setUp(self) -> None:
         """ Set up DB in memory """
         repo = SQLiteRepository(db_path=':memory:')
-        repo.cur.execute(
-            """
-            CREATE TABLE channels (
-                    id   TEXT PRIMARY KEY NOT NULL,
-                    name TEXT NOT NULL,
-                    url  TEXT NOT NULL
-            );
-            """
-        )
-        repo.cur.execute(
-            """
-            CREATE TABLE videos (
-                id          TEXT     PRIMARY KEY ON CONFLICT FAIL
-                                     NOT NULL,
-                channel_id  TEXT     REFERENCES channels (id) ON DELETE CASCADE
-                                     NOT NULL,
-                name        TEXT     NOT NULL,
-                url         TEXT     NOT NULL,
-                pubdate     DATETIME NOT NULL,
-                description TEXT     NOT NULL,
-                thumbnail   TEXT     NOT NULL,
-                new         BOOLEAN  NOT NULL,
-                watched     BOOLEAN  NOT NULL
-            );
-            """
-        )
+        for sqlite_statement in SQLITE_DB_CREATION_STATEMENTS:
+            repo.cur.execute(sqlite_statement)
         self.ytsm: YTSubManager = YTSubManager(repository=repo)
 
     def test_add_channel(self):

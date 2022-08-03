@@ -11,18 +11,42 @@ from collections.abc import Mapping
 from typing import Union
 
 NEW_VIDEO, UNWATCHED_VIDEO, OLD_VIDEO = 'NEW', 'UNWATCHED', 'OLD'
-CLI_COLORS = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', 'bright_black', 'bright_red',
-              'bright_green', 'bright_yellow', 'bright_blue', 'bright_magenta', 'bright_cyan', 'bright_white']
+VALID_CLI_COLORS = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', 'bright_black', 'bright_red',
+                    'bright_green', 'bright_yellow', 'bright_blue', 'bright_magenta', 'bright_cyan', 'bright_white']
 
-TUI_COLORS = ['black', 'dark red', 'dark green', 'brown', 'dark blue', 'dark magenta', 'dark cyan', 'light gray',
-              'dark gray', 'light red', 'light green', 'yellow', 'light blue', 'light magenta', 'light cyan', 'white']
+VALID_TUI_COLORS = ['black', 'dark red', 'dark green', 'brown', 'dark blue', 'dark magenta', 'dark cyan', 'light gray',
+                    'dark gray', 'light red', 'light green', 'yellow', 'light blue', 'light magenta', 'light cyan',
+                    'white']
 
+SQLITE_DB_CREATION_STATEMENTS = [
+    """
+    CREATE TABLE channels (
+            id   TEXT PRIMARY KEY NOT NULL,
+            name TEXT NOT NULL,
+            url  TEXT NOT NULL
+    );
+    """,
+
+    """
+    CREATE TABLE videos (
+        id          TEXT     PRIMARY KEY ON CONFLICT FAIL
+                             NOT NULL,
+        channel_id  TEXT     REFERENCES channels (id) ON DELETE CASCADE
+                             NOT NULL,
+        name        TEXT     NOT NULL,
+        url         TEXT     NOT NULL,
+        pubdate     DATETIME NOT NULL,
+        description TEXT     NOT NULL,
+        thumbnail   TEXT     NOT NULL,
+        new         BOOLEAN  NOT NULL,
+        watched     BOOLEAN  NOT NULL
+    );
+    """
+]
 
 @dataclasses.dataclass
 class GUIColorScheme(Mapping):
     """ Dataclass for holding GUI color scheme settings """
-    # window_size: str = '854x700'
-
     accent: str = '#502B2B'
     background: str = '#292828'
     background_active: str = '#525151'
@@ -103,21 +127,73 @@ class CLISettings:
     def __post_init__(self):
         """ Check all colors are in CLI_COLORS """
         for key in self.__dict__:
-            if self.__dict__[key] not in CLI_COLORS:
+            if self.__dict__[key] not in VALID_CLI_COLORS:
                 raise Settings.InvalidSettingsValue(f'In CLISettings: "{key}": "{self.__dict__[key]}", '
-                                                    f'use one of these: {", ".join(CLI_COLORS)}')
+                                                    f'use one of these: {", ".join(VALID_CLI_COLORS)}')
 
-# @dataclasses.dataclass
-# class TUISettings:
-#     """ Dataclass for holding all TUI Settings """
-#     foreground_error: str = 'light red'
-#     foreground_prompt: str = 'yellow'
-#     foreground_info: str = 'light green'
-#
-#     foreground_old_video: str = 'white'
-#     foreground_unwatched_video: str = 'light cyan'
-#     foreground_new_video: str = 'light green'
+@dataclasses.dataclass
+class TUIColorScheme(Mapping):
+    """ Dataclass for holding TUI color scheme settings """
+    foreground_error: str = 'light red'
+    foreground_prompt: str = 'yellow'
+    foreground_info: str = 'light green'
 
+    foreground_old_video: str = 'white'
+    foreground_unwatched_video: str = 'light cyan'
+    foreground_new_video: str = 'light green'
+
+    def __getitem__(self, x):
+        return self.__dict__[x]
+
+    def __iter__(self):
+        return iter(self.__dict__)
+
+    def __len__(self):
+        return len(self.__dict__)
+
+@dataclasses.dataclass
+class TUIKeyBindings(Mapping):
+    """ Dataclass for holding TUI key bindings settings """
+    quit_key: str = 'esc'
+    quit_key_2: str = 'q'
+    help_toggle_key: str = 'h'
+    open_settings_file_key: str = 's'
+    all_videos_toggle_key: str = 'v'
+
+    update_all_channels_key: str = 'x'
+    add_channel_key: str = 'a'
+
+    update_channel_key: str = 'u'
+    remove_channel_key: str = 'r'
+
+    mark_watched_key: str = 'm'
+    open_on_browser_key: str = 'enter'
+    open_on_browser_key_2: str = 'w'
+    video_details_key: str = 'd'
+
+    def __getitem__(self, x):
+        return self.__dict__[x]
+
+    def __iter__(self):
+        return iter(self.__dict__)
+
+    def __len__(self):
+        return len(self.__dict__)
+
+@dataclasses.dataclass
+class TUISettings:
+    """ Dataclass for holding all TUI Settings """
+    colorscheme: Union[TUIColorScheme, dict] = TUIColorScheme()
+    keybindings: Union[TUIKeyBindings, dict] = TUIKeyBindings()
+
+    def __post_init__(self):
+        self.colorscheme = TUIColorScheme(**self.colorscheme)
+        self.keybindings = TUIKeyBindings(**self.keybindings)
+
+    def to_json(self) -> dict:
+        """ Transform class to JSON serializable dict """
+        return {'colorscheme': self.colorscheme.__dict__,
+                'keybindings': self.keybindings.__dict__}
 
 @dataclasses.dataclass
 class AdvancedSettings:
@@ -132,11 +208,13 @@ class Settings:
         self.path = None
         self.gui_settings = GUISettings()
         self.cli_settings = CLISettings()
+        self.tui_settings = TUISettings()
         self.advanced_settings = AdvancedSettings()
 
     def __dict__(self):
         return {'gui_settings': self.gui_settings.to_json(),
                 'cli_settings': self.cli_settings.__dict__,
+                'tui_settings': self.tui_settings.to_json(),
                 'advanced_settings': self.advanced_settings.__dict__}
 
     def set_path(self, path: str) -> None:
@@ -163,7 +241,7 @@ class Settings:
             try:
                 # Load settings by key if they exist, else go for factory
                 settings_map = {'gui_settings': GUISettings, 'cli_settings': CLISettings,
-                                'advanced_settings': AdvancedSettings}
+                                'tui_settings': TUISettings, 'advanced_settings': AdvancedSettings}
                 for sett_key in settings_map:
                     if jsoned.get(sett_key):
                         setattr(self, sett_key, settings_map[sett_key](**jsoned[sett_key]))
@@ -194,11 +272,14 @@ class Settings:
         if not restore_type:
             self.gui_settings = GUISettings()
             self.cli_settings = CLISettings()
+            self.tui_settings = TUISettings()
             self.advanced_settings = AdvancedSettings()
         elif restore_type == GUISettings:
             self.gui_settings = GUISettings()
         elif restore_type == CLISettings:
             self.cli_settings = CLISettings()
+        elif restore_type == TUISettings:
+            self.tui_settings = TUISettings()
         elif restore_type == AdvancedSettings:
             self.advanced_settings = AdvancedSettings()
         else:

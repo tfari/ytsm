@@ -4,7 +4,8 @@ from abc import ABCMeta, abstractmethod
 from typing import Optional
 
 from ytsm.model import Channel, Video
-from ytsm.settings import SETTINGS
+from ytsm.settings import SETTINGS, SQLITE_DB_CREATION_STATEMENTS
+
 
 class AbstractRepository(metaclass=ABCMeta):
     """ Abstract repository class """
@@ -138,35 +139,10 @@ class SQLiteRepository(AbstractRepository):
     @staticmethod
     def create_db(db_path: str):
         """ Creates the DB on db_path """
-        # TODO: This should not be hardcoded here.
         con = sqlite3.connect(db_path)
         cur = con.cursor()
-        cur.execute(
-            """ 
-            CREATE TABLE channels (
-                id   TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                url  TEXT NOT NULL
-                );
-            """
-        )
-        cur.execute(
-            """
-            CREATE TABLE videos (
-                id          TEXT     PRIMARY KEY ON CONFLICT FAIL
-                                     NOT NULL,
-                channel_id  TEXT     REFERENCES channels (id) ON DELETE CASCADE
-                                     NOT NULL,
-                name        TEXT     NOT NULL,
-                url         TEXT     NOT NULL,
-                pubdate     DATETIME NOT NULL,
-                description TEXT     NOT NULL,
-                thumbnail   TEXT     NOT NULL,
-                new         BOOLEAN  NOT NULL,
-                watched     BOOLEAN  NOT NULL
-                ); 
-            """
-        )
+        for sqlite_statement in SQLITE_DB_CREATION_STATEMENTS:
+            cur.execute(sqlite_statement)
         con.commit()
         con.close()
 

@@ -3,7 +3,8 @@ import os
 import json
 from unittest import TestCase, mock
 
-from ytsm.settings import Settings, GUISettings, GUIColorScheme, GUIFontScheme, CLISettings, AdvancedSettings
+from ytsm.settings import Settings, GUISettings, GUIColorScheme, GUIFontScheme, CLISettings, AdvancedSettings, \
+    TUISettings, TUIColorScheme, TUIKeyBindings
 
 class TestSettings(TestCase):
     def setUp(self) -> None:
@@ -87,11 +88,13 @@ class TestSettings(TestCase):
         # No type
         self.settings.gui_settings = None
         self.settings.cli_settings = None
+        self.settings.tui_settings = None
         self.settings.advanced_settings = None
         self.settings.restore_settings()
         mocked_func.assert_called()
         self.assertEqual(GUISettings(), self.settings.gui_settings)
         self.assertEqual(CLISettings(), self.settings.cli_settings)
+        self.assertEqual(TUISettings(), self.settings.tui_settings)
         self.assertEqual(AdvancedSettings(), self.settings.advanced_settings)
 
     @mock.patch("ytsm.settings.Settings.save_settings")
@@ -99,11 +102,13 @@ class TestSettings(TestCase):
         # GUISettings only
         self.settings.gui_settings = None
         self.settings.cli_settings = None
+        self.settings.tui_settings = None
         self.settings.advanced_settings = None
         self.settings.restore_settings(restore_type=GUISettings)
         mocked_func.assert_called()
         self.assertEqual(GUISettings(), self.settings.gui_settings)
         self.assertEqual(None, self.settings.cli_settings)
+        self.assertEqual(None, self.settings.tui_settings)
         self.assertEqual(None, self.settings.advanced_settings)
 
     @mock.patch("ytsm.settings.Settings.save_settings")
@@ -111,11 +116,27 @@ class TestSettings(TestCase):
         # CLISettings only
         self.settings.gui_settings = None
         self.settings.cli_settings = None
+        self.settings.tui_settings = None
         self.settings.advanced_settings = None
         self.settings.restore_settings(restore_type=CLISettings)
         mocked_func.assert_called()
         self.assertEqual(None, self.settings.gui_settings)
         self.assertEqual(CLISettings(), self.settings.cli_settings)
+        self.assertEqual(None, self.settings.tui_settings)
+        self.assertEqual(None, self.settings.advanced_settings)
+
+    @mock.patch("ytsm.settings.Settings.save_settings")
+    def test_restore_settings_tui_settings(self, mocked_func):
+        # CLISettings only
+        self.settings.gui_settings = None
+        self.settings.cli_settings = None
+        self.settings.tui_settings = None
+        self.settings.advanced_settings = None
+        self.settings.restore_settings(restore_type=TUISettings)
+        mocked_func.assert_called()
+        self.assertEqual(None, self.settings.gui_settings)
+        self.assertEqual(None, self.settings.cli_settings)
+        self.assertEqual(TUISettings(), self.settings.tui_settings)
         self.assertEqual(None, self.settings.advanced_settings)
 
     @mock.patch("ytsm.settings.Settings.save_settings")
@@ -123,11 +144,13 @@ class TestSettings(TestCase):
         # AdvancedSettings only
         self.settings.gui_settings = None
         self.settings.cli_settings = None
+        self.settings.tui_settings = None
         self.settings.advanced_settings = None
         self.settings.restore_settings(restore_type=AdvancedSettings)
         mocked_func.assert_called()
         self.assertEqual(None, self.settings.gui_settings)
         self.assertEqual(None, self.settings.cli_settings)
+        self.assertEqual(None, self.settings.tui_settings)
         self.assertEqual(AdvancedSettings(), self.settings.advanced_settings)
 
     def test_restore_settings_raises_TypeError(self):
@@ -145,3 +168,9 @@ class TestCLISettings(TestCase):
             'foreground_error': 'bad color'
         }
         self.assertRaises(Settings.InvalidSettingsValue, CLISettings, **vals)
+
+class TestTUISettings(TestCase):
+    def test_to_json(self):
+        ts = TUISettings()
+        expected = {'colorscheme': TUIColorScheme().__dict__, 'keybindings': TUIKeyBindings().__dict__}
+        self.assertEqual(expected, ts.to_json())
