@@ -218,6 +218,18 @@ class TestYTSMController(TestCase):
         self._ytsm.update_channel = lambda x: x.upper()  # This way we also test the channel_id was passed
         self.assertEqual('TEST', self.ytsmc.update_channel(YTSMController.ChannelDTO(c, 0, 0, 0)))
 
+    def test_update_channel_raises_UpdateChannelError(self):
+        self._ytsm._add_channel('test', 'Test', 'abc')
+        c = self._ytsm.get_channel('test')
+
+        def raiser(x):
+            """ Monkeypatch a raise """
+            raise YTSubManager.BaseYTSMError(x)
+
+        self._ytsm.update_channel = raiser
+        cdto = YTSMController.ChannelDTO(c, 0, 0, 0)
+        self.assertRaises(YTSMController.UpdateChannelError, self.ytsmc.update_channel, cdto)
+
     def test_update_all_channels(self):
         self._ytsm._add_channel('test', 'Test', 'abc')
         self._ytsm._add_channel('test2', 'Test', 'abc')
@@ -225,6 +237,13 @@ class TestYTSMController(TestCase):
         self._ytsm.update_all_channels = lambda: {'total': 666, 'test': 1, 'test2': 2, 'test3': 8}
         expected = {'total': 666, 'details': [('Test', 1), ('Test', 2), ('Test', 8)]}
         self.assertEqual(expected, self.ytsmc.update_all_channels())
+
+    def test_update_all_channels_raises_UpdateAllChannelsError(self):
+        def raiser():
+            """ Monkeypatch a raise """
+            raise YTSubManager.BaseYTSMError()
+        self._ytsm.update_all_channels = raiser
+        self.assertRaises(YTSMController.UpdateAllChannelsError, self.ytsmc.update_all_channels)
 
     def test_mark_video_watched(self):
         self._ytsm._add_channel('test', 'Test', 'abc')

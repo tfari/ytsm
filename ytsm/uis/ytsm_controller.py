@@ -134,23 +134,34 @@ class YTSMController:
         self.ytsm.mark_all_videos_old(channel_dto.channel.idx)
 
     def update_channel(self, channel_dto: ChannelDTO) -> int:
-        """ Update a Channel, return the amount of new videos. """
-        amt = self.ytsm.update_channel(channel_dto.channel.idx) # TODO: This produces raises
+        """
+        Update a Channel, return the amount of new videos.
+        :raises UpdateChannelError: if the attempt to update a Channel failed
+        """
+        try:
+            amt = self.ytsm.update_channel(channel_dto.channel.idx)
+        except YTSubManager.BaseYTSMError as e:
+            raise YTSMController.UpdateChannelError(f'{e}')
         return amt
 
     def update_all_channels(self) -> dict:
         """
         Update all Channels, return the total amount of new videos, and the amount per channel name, as a list of
         tuples under the key "details".
+        :raises UpdateAllChannelsError: if the attempt to update all channels failed
         :return : dict -> {'total': 2, 'details': [('channel_name', 1), ('channel_name', 1)]}
         """
-        update_data = self.ytsm.update_all_channels()  # TODO: This produces raises
-        response = {'total': update_data['total'], 'details': []}
-        for ud_key in update_data:
-            if ud_key != "total":
-                response['details'].append((self.ytsm.get_channel(ud_key).name, update_data[ud_key]))
+        try:
+            update_data = self.ytsm.update_all_channels()
+        except YTSubManager.BaseYTSMError as e:
+            raise YTSMController.UpdateAllChannelsError(f'{e}')
+        else:
+            response = {'total': update_data['total'], 'details': []}
+            for ud_key in update_data:
+                if ud_key != "total":
+                    response['details'].append((self.ytsm.get_channel(ud_key).name, update_data[ud_key]))
 
-        return response
+            return response
 
     def mark_video_watched(self, video_dto: VideoDTO) -> None:
         """ Mark a Video as watched """
@@ -186,3 +197,9 @@ class YTSMController:
 
     class ChannelIDNotFound(Exception):
         """ Channel ID was not found """
+
+    class UpdateChannelError(Exception):
+        """ Attempted Channel update generated an error """
+
+    class UpdateAllChannelsError(Exception):
+        """ Attempted all Channels update generated an error """
