@@ -10,7 +10,8 @@ Channel/Video and prompt you for confirmation if there is more than one option.
 * factory-restore [--all| --setts | --db | --help]
     Restore the data for the application to factory, either everything, or only the settings and/or db.
 * notify-update
-    Update all channels and notify the changed ones. For usage with crontab or other scheduling of commands.
+    Update all channels and notify about the (non-muted) changed ones. For usage with crontab or other scheduling of 
+    commands. 
     This implementation uses the "notify-send" tool to access the system's notification tray.
     More info on: https://vaskovsky.net/notify-send/
 * channels [--new/-n | --unwatched/-u]
@@ -24,6 +25,10 @@ Channel/Video and prompt you for confirmation if there is more than one option.
     Update a channel, or all channels if -a is passed.
 * visit NAME
     Visit a Channel's YT page.
+* mute NAME
+    Mute a Channel's notifications
+* unmute NAME
+    Unmute a Channel's notifications
 * find TERM [--videos/-v | --description | --date | --channel-name]
     Find channels by name. If -v is passed, find videos by name, if -d is passed, it finds videos by description, 
     if --date is passed, find videos by date range. If --channel-name is passed, only search within a specific channel.

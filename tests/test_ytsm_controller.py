@@ -270,3 +270,13 @@ class TestYTSMController(TestCase):
     def test_visit_channel(self, mocked_fun):
         self.ytsmc.visit_channel('666')
         mocked_fun.assert_called_with('https://youtube.com/channel/666')
+
+    def test_toggle_mute_channel(self):
+        self._ytsm._add_channel('test', 'Test', 'abc')
+        self.ytsmc.toggle_mute_channel(YTSMController.ChannelDTO(self._ytsm.get_channel('test'), 0, 0, 0))
+        self.assertEqual(False, self._ytsm.get_channel('test').notify_on)
+        self.ytsmc.toggle_mute_channel(YTSMController.ChannelDTO(self._ytsm.get_channel('test'), 0, 0, 0))
+        self.assertEqual(True, self._ytsm.get_channel('test').notify_on)
+        self.ytsmc.toggle_mute_channel(YTSMController.ChannelDTO(self._ytsm.get_channel('test'), 0, 0, 0))
+        self.assertEqual(False, self._ytsm.get_channel('test').notify_on)
+

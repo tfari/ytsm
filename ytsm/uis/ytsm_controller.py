@@ -178,6 +178,13 @@ class YTSMController:
         """ Visit a Channel's YT page """
         webbrowser.open(f'https://youtube.com/channel/{channel_idx}')
 
+    def toggle_mute_channel(self, channel_dto: ChannelDTO) -> None:
+        """ Toggle Channel's notify_on status """
+        if channel_dto.channel.notify_on:
+            self.ytsm.set_notify_on_status_false(channel_dto.channel.idx)
+        else:
+            self.ytsm.set_notify_on_status_true(channel_dto.channel.idx)
+
     @dataclasses.dataclass
     class ChannelDTO:
         """ Data Transfer Objects for Channels """

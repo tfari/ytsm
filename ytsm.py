@@ -48,7 +48,8 @@ def _echo_channels(channel_list: list[model.Channel]):
         color = SETTINGS.cli_settings.foreground_new_video if new \
             else SETTINGS.cli_settings.foreground_unwatched_video \
             if unwatched else SETTINGS.cli_settings.foreground_old_video
-        _echo(f'\t{c.name} - New: {new} / Unwatched: {unwatched} / Total: {total}', color)
+        mute = '(m) ' if not c.notify_on else ''
+        _echo(f'\t{mute}{c.name} - New: {new} / Unwatched: {unwatched} / Total: {total}', color)
 
 
 def _echo_videos(video_list: list[model.Video], show_channel_name: bool = False):
@@ -179,14 +180,22 @@ def _factory_restore(all: bool = True, setts: bool = False, db: bool = False) ->
 @click.command('notify-update')
 def notify_update():
     """
-    Update all channels and notify the changed ones. For usage with crontab or other scheduling of commands.
+    Update all channels and notify about the (non-muted) changed ones. For usage with crontab or other scheduling of
+    commands.
     This implementation uses the "notify-send" tool to access the system's notification tray.
     More info on: https://vaskovsky.net/notify-send/
     """
-    updates = YTSM.update_all_channels()
-    if updates['total'] > 0:
-        message = f'New videos on {", ".join([YTSM.get_channel(c_id).name for c_id in updates if c_id != "total"])}'
-        subprocess.run(['notify-send', 'YTSM', message])
+    try:
+        updates = YTSM.update_all_channels()
+    except YTSM.BaseYTSMError as e:
+        _error_echo(f'{type(e).__name__}: {str(e)}')
+    else:
+        if updates['total'] > 0:
+            channels_updated = [YTSM.get_channel(c_id).name for c_id in updates if c_id != "total" and YTSM.get_channel(
+                c_id).notify_on]
+            if channels_updated:
+                message = f'New videos on {", ".join(channels_updated)}'
+                subprocess.run(['notify-send', 'YTSM', message])
 
 
 @click.command('channels')
@@ -270,6 +279,30 @@ def visit_channel(name: str):
     visiting_channel: Optional[model.Channel] = _find_and_confirm(name, YTSM.find_channels(name), 'channels')
     if visiting_channel:
         webbrowser.open(f'https://www.youtube.com/channel/{visiting_channel.idx}')
+
+@click.command('mute')
+@click.argument('NAME', type=str)
+def mute_channel(name: str):
+    """ Mute a Channel's notifications """
+    muting_channel: Optional[model.Channel] = _find_and_confirm(name, YTSM.find_channels(name), 'channels')
+    if muting_channel:
+        if not muting_channel.notify_on:
+            _error_echo(f'Notifications already muted: "{muting_channel.name}"')
+        else:
+            YTSM.set_notify_on_status_false(muting_channel.idx)
+            _success_echo(f'Notifications muted: "{muting_channel.name}"')
+
+@click.command('unmute')
+@click.argument('NAME', type=str)
+def unmute_channel(name: str):
+    """ Unmute a Channel's notifications """
+    unmuting_channel: Optional[model.Channel] = _find_and_confirm(name, YTSM.find_channels(name), 'channels')
+    if unmuting_channel:
+        if unmuting_channel.notify_on:
+            _error_echo(f'Notifications already on: "{unmuting_channel.name}"')
+        else:
+            YTSM.set_notify_on_status_true(unmuting_channel.idx)
+            _success_echo(f'Notifications on: "{unmuting_channel.name}"')
 
 
 @click.command('find')
@@ -427,6 +460,8 @@ if __name__ == '__main__':
     ytsm.add_command(remove_channel)
     ytsm.add_command(update_channel)
     ytsm.add_command(visit_channel)
+    ytsm.add_command(mute_channel)
+    ytsm.add_command(unmute_channel)
     ytsm.add_command(find)
     ytsm.add_command(list_videos)
     ytsm.add_command(video_detail)

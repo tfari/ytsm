@@ -166,10 +166,10 @@ class TUIKeyBindings(Mapping):
 
     update_channel_key: str = 'u'
     remove_channel_key: str = 'r'
+    toggle_mute_notifications_key: str = 'm'
 
-    mark_watched_key: str = 'm'
+    mark_watched_key: str = 'w'
     open_on_browser_key: str = 'enter'
-    open_on_browser_key_2: str = 'w'
     video_details_key: str = 'd'
 
     def __getitem__(self, x):
