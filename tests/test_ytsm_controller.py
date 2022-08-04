@@ -219,8 +219,12 @@ class TestYTSMController(TestCase):
         self.assertEqual('TEST', self.ytsmc.update_channel(YTSMController.ChannelDTO(c, 0, 0, 0)))
 
     def test_update_all_channels(self):
-        self._ytsm.update_all_channels = lambda: 666
-        self.assertEqual(666, self.ytsmc.update_all_channels())
+        self._ytsm._add_channel('test', 'Test', 'abc')
+        self._ytsm._add_channel('test2', 'Test', 'abc')
+        self._ytsm._add_channel('test3', 'Test', 'abc')
+        self._ytsm.update_all_channels = lambda: {'total': 666, 'test': 1, 'test2': 2, 'test3': 8}
+        expected = {'total': 666, 'details': [('Test', 1), ('Test', 2), ('Test', 8)]}
+        self.assertEqual(expected, self.ytsmc.update_all_channels())
 
     def test_mark_video_watched(self):
         self._ytsm._add_channel('test', 'Test', 'abc')

@@ -1,8 +1,9 @@
 """ Entry-point """
 import os
 import sys
-import webbrowser
+import platform
 import subprocess
+import webbrowser
 
 from logging import INFO
 from typing import Optional, Any
@@ -10,8 +11,6 @@ from typing import Optional, Any
 import click
 
 from ytsm import ytsubmanager, repository, settings, logger, model
-# from ytsm.uis.gui_tk import ytsm_gui
-# from ytsm.uis.tui_urwid import ytsm_tui
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = f'{SCRIPT_PATH}/data'
@@ -113,7 +112,14 @@ def ytsm():
 
     # 5 - Load settings
     SETTINGS.set_path(SETTINGS_FILEPATH)
-    SETTINGS.load_settings()
+    try:
+        SETTINGS.load_settings()
+    except settings.Settings.BrokenJSONFile as e:
+        _error_echo(f'Could not load settings file, consider fixing it or deleting it to generate a new one, '
+                    f'error: "{str(e)}"')
+    except settings.Settings.ExtraKeys as e:
+        _error_echo(f'Could not load settings file, consider fixing it or deleting it to generate a new one, '
+                    f'error: "{str(e)}"')
 
     # 6 - Load repo
     repo = repository.SQLiteRepository(db_path=SQL_REPO_FILEPATH)
@@ -177,15 +183,9 @@ def notify_update():
     This implementation uses the "notify-send" tool to access the system's notification tray.
     More info on: https://vaskovsky.net/notify-send/
     """
-    updates = []
-    channels = YTSM.get_all_channels()
-    for c in channels:
-        new = YTSM.update_channel(c.idx)
-        if new != 0:
-            updates.append(c.name)
-
-    if updates:
-        message = f'New videos on {", ".join(updates)}'
+    updates = YTSM.update_all_channels()
+    if updates['total'] > 0:
+        message = f'New videos on {", ".join([YTSM.get_channel(c_id).name for c_id in updates if c_id != "total"])}'
         subprocess.run(['notify-send', 'YTSM', message])
 
 
@@ -243,11 +243,13 @@ def update_channel(name: str, a: bool) -> None:
     if a:
         try:
             _success_echo(f'Updating {len(YTSM.get_all_channels())} channels, this might take a while...')
-            n_videos = YTSM.update_all_channels()
+            response = YTSM.update_all_channels()
         except YTSM.BaseYTSMError as e:
             _error_echo(f'{type(e).__name__}: {str(e)}')  # Fatal err
         else:
-            _success_echo(f'Found: {n_videos} new videos.')
+            list_new = "\n".join([f'\tChannel "{YTSM.get_channel(k).name}" has {response[k]} new videos.' for k in
+                                  response if k != "total"])
+            _success_echo(f'Found: {response["total"]} new videos.\n{list_new}')
             return None  # Return when finished, no name and -a allowed
 
     if name:
@@ -397,16 +399,21 @@ def mark_watched(name: str, c: bool = False):
                           f'"{YTSM.get_channel(mark_video_watched_and_old.channel_id).name}" as watched.')
 
 
-# @click.command('tui')
-# def tui():
-#     """ Open textual user interface (not for Windows). """
-#     ytsm_tui.YTSMTui(ytsm=YTSM, settings=settings.Settings())
+@click.command('tui')
+def tui():
+    """ Open textual user interface (not for Windows). """
+    if platform.system() == 'Windows':
+        _error_echo('TUI cannot be used in Windows')
+    else:
+        from ytsm.uis.tui_urwid import ytsm_tui
+        ytsm_tui.YTSMTui(ytsm=YTSM)
 
 
-# @click.command('gui')
-# def gui():
-#     """ Open graphical user interface. """
-#     ytsm_gui.YTSMGUI(ytsm=YTSM)
+@click.command('gui')
+def gui():
+    """ Open graphical user interface. """
+    from ytsm.uis.gui_tk import ytsm_gui
+    ytsm_gui.YTSMGUI(ytsm=YTSM)
 
 
 #######################################################################################################################
@@ -425,6 +432,6 @@ if __name__ == '__main__':
     ytsm.add_command(video_detail)
     ytsm.add_command(watch_video)
     ytsm.add_command(mark_watched)
-    # ytsm.add_command(tui)
-    # ytsm.add_command(gui)
+    ytsm.add_command(tui)
+    ytsm.add_command(gui)
     ytsm()

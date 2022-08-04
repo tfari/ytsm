@@ -92,7 +92,7 @@ class TestYTSubManager(TestCase):
         # Just check it funnels the results from _update_video_list
         self.ytsm.scraper.get_video_list_multiple = lambda x: {'a': 'b', 'b': 'a'}
         self.ytsm._update_video_list = lambda x, y: 388.5  # cute
-        self.assertEqual(777, self.ytsm.update_all_channels())
+        self.assertEqual({'total': 777, 'a': 388.5, 'b': 388.5}, self.ytsm.update_all_channels())
 
     def test_update_all_channels_raises_ScraperError_on_YTScraper_errors(self):
         self.ytsm.scraper.get_video_list_multiple = lambda x: self._raiser_helper(YTScraper.YTUrl404)

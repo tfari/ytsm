@@ -135,13 +135,22 @@ class YTSMController:
 
     def update_channel(self, channel_dto: ChannelDTO) -> int:
         """ Update a Channel, return the amount of new videos. """
-        amt = self.ytsm.update_channel(channel_dto.channel.idx)
+        amt = self.ytsm.update_channel(channel_dto.channel.idx) # TODO: This produces raises
         return amt
 
-    def update_all_channels(self) -> int:
-        """ Update all Channels, return the amount of new videos. """
-        amt = self.ytsm.update_all_channels()
-        return amt
+    def update_all_channels(self) -> dict:
+        """
+        Update all Channels, return the total amount of new videos, and the amount per channel name, as a list of
+        tuples under the key "details".
+        :return : dict -> {'total': 2, 'details': [('channel_name', 1), ('channel_name', 1)]}
+        """
+        update_data = self.ytsm.update_all_channels()  # TODO: This produces raises
+        response = {'total': update_data['total'], 'details': []}
+        for ud_key in update_data:
+            if ud_key != "total":
+                response['details'].append((self.ytsm.get_channel(ud_key).name, update_data[ud_key]))
+
+        return response
 
     def mark_video_watched(self, video_dto: VideoDTO) -> None:
         """ Mark a Video as watched """
