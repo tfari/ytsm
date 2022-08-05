@@ -21,6 +21,16 @@ class YTSMController:
         self.channel_search_term = ''
         self.video_search_term = ''
 
+    def get_channel_dto_from_id(self, channel_id: str) -> ChannelDTO:
+        """
+        Get a ChannelDTO from a channel's id
+        :raises ChannelDoesNotExist : If Channel with channel_id does not exist
+        """
+        try:
+            return self.make_channel_dto(self.ytsm.get_channel(channel_id))
+        except YTSubManager.ChannelDoesNotExist:
+            raise self.ChannelIDNotFound(channel_id)
+
     def make_channel_dto(self, channel: Channel) -> ChannelDTO:
         """ Make a Channel DTO from a Channel """
         total, new, unwatched = self.ytsm.get_amt_videos(channel_id=channel.idx)

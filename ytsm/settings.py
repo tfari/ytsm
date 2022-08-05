@@ -24,7 +24,8 @@ SQLITE_DB_CREATION_STATEMENTS = [
             id   TEXT PRIMARY KEY NOT NULL,
             name TEXT NOT NULL,
             url  TEXT NOT NULL,
-            notify_on BOOLEAN NOT NULL
+            notify_on BOOLEAN NOT NULL,
+            thumbnail TEXT NOT NULL
     );
     """,
 

@@ -20,27 +20,37 @@ class TestYTSubManager(TestCase):
 
     def test_add_channel(self):
         # Just check everything goes around
-        self.ytsm.scraper.get_channel_id_from_url = lambda x: '777'
+        self.ytsm.scraper.get_channel_id_and_thumbnail_from_url = lambda x: ('777', '777')
         self.ytsm.scraper.get_channel_information = lambda x: {'id': '777', 'name': '777', 'url': '777'}
         self.ytsm.scraper.cache = {'777': ''}
         self.ytsm.scraper.update_channel = lambda x, use_cache: '777'
         self.assertEqual('777', self.ytsm.add_channel('test'))
 
     def test_add_channel_raises_ScraperError_on_YTScraper_errors(self):
-        self.ytsm.scraper.get_channel_id_from_url = lambda x: self._raiser_helper(YTScraper.UrlNotYT)
+        self.ytsm.scraper.get_channel_id_and_thumbnail_from_url = lambda x: self._raiser_helper(
+            YTScraper.UrlNotYT)
         self.assertRaises(YTSubManager.ScraperError, self.ytsm.add_channel, '666')
-        self.ytsm.scraper.get_channel_id_from_url = lambda x: self._raiser_helper(YTScraper.YTUrlNotSupported)
+        self.ytsm.scraper.get_channel_id_and_thumbnail_from_url = lambda x: self._raiser_helper(
+            YTScraper.YTUrlNotSupported)
         self.assertRaises(YTSubManager.ScraperError, self.ytsm.add_channel, '666')
-        self.ytsm.scraper.get_channel_id_from_url = lambda x: self._raiser_helper(YTScraper.YTUrl404)
+        self.ytsm.scraper.get_channel_id_and_thumbnail_from_url = lambda x: self._raiser_helper(
+            YTScraper.YTUrl404)
         self.assertRaises(YTSubManager.ScraperError, self.ytsm.add_channel, '666')
-        self.ytsm.scraper.get_channel_id_from_url = lambda x: self._raiser_helper(YTScraper.YTUrlUnexpectedStatusCode)
+        self.ytsm.scraper.get_channel_id_and_thumbnail_from_url = lambda x: self._raiser_helper(
+            YTScraper.YTUrlUnexpectedStatusCode)
         self.assertRaises(YTSubManager.ScraperError, self.ytsm.add_channel, '666')
-        self.ytsm.scraper.get_channel_id_from_url = lambda x: self._raiser_helper(YTScraper.GettingError)
+        self.ytsm.scraper.get_channel_id_and_thumbnail_from_url = lambda x: self._raiser_helper(
+            YTScraper.GettingError)
         self.assertRaises(YTSubManager.ScraperError, self.ytsm.add_channel, '666')
-        self.ytsm.scraper.get_channel_id_from_url = lambda x: self._raiser_helper(YTScraper.ChannelIDParsingError)
+        self.ytsm.scraper.get_channel_id_and_thumbnail_from_url = lambda x: self._raiser_helper(
+            YTScraper.ChannelIDParsingError)
+        self.assertRaises(YTSubManager.ScraperError, self.ytsm.add_channel, '666')
+        self.ytsm.scraper.get_channel_id_and_thumbnail_from_url = lambda x: self._raiser_helper(
+            YTScraper.ChannelThumbnailParsingError)
         self.assertRaises(YTSubManager.ScraperError, self.ytsm.add_channel, '666')
 
-        self.ytsm.scraper.get_channel_id_from_url = lambda x: 'test'
+        # Errors form yts.scraper.get_channel_information
+        self.ytsm.scraper.get_channel_id_and_thumbnail_from_url = lambda x: ('test', 'test')
 
         self.ytsm.scraper.get_channel_information = lambda x: self._raiser_helper(YTScraper.YTUrl404)
         self.assertRaises(YTSubManager.ScraperError, self.ytsm.add_channel, '666')
@@ -57,13 +67,13 @@ class TestYTSubManager(TestCase):
         self.assertRaises(YTSubManager.ScraperError, self.ytsm.add_channel, '666')
 
     def test_add_channel_raises_ChannelAlreadyExists(self):
-        self.ytsm._add_channel('test', '', '')
-        self.ytsm.scraper.get_channel_id_from_url = lambda x: 'test'
+        self.ytsm._add_channel('test', '', '', '')
+        self.ytsm.scraper.get_channel_id_and_thumbnail_from_url = lambda x: ('test', 'test')
         self.assertRaises(YTSubManager.ChannelAlreadyExists, self.ytsm.add_channel, '666')
 
     def test_add_channel_raises_ChannelDoesNotExist(self):
         """ This should never happen, as the Channel is created before the call to update_channel """
-        self.ytsm.scraper.get_channel_id_from_url = lambda x: 'test'
+        self.ytsm.scraper.get_channel_id_and_thumbnail_from_url = lambda x: ('test', 'test')
         self.ytsm.scraper.get_channel_information = lambda x: {'id': 'test', 'name': 'name', 'url': 'url'}
         self.ytsm.update_channel = lambda x, use_cache: self._raiser_helper(YTSubManager.ChannelAlreadyExists)
         self.assertRaises(YTSubManager.ChannelAlreadyExists, self.ytsm.add_channel, '666')
@@ -109,7 +119,7 @@ class TestYTSubManager(TestCase):
 
     def test__update_video_list(self):
         # Set up
-        self.ytsm._add_channel('1', '', '')
+        self.ytsm._add_channel('1', '', '', '')
         self.ytsm._add_video('1', '1', '', '', '', '', '')
 
         # Existing video
@@ -131,7 +141,7 @@ class TestYTSubManager(TestCase):
                           [{}], '666')
 
     def test_get_last_video_from_channel(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
         self.assertIsNone(self.ytsm._get_last_video_from_channel('test'))
 
         self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-02', 'Desc', 'Thumbnail')
@@ -144,51 +154,51 @@ class TestYTSubManager(TestCase):
         self.assertRaises(YTSubManager.ChannelDoesNotExist, self.ytsm._get_last_video_from_channel, 'test')
 
     def test__add_channel(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
-        self.assertEqual(Channel('test', 'Name', 'URL'), self.ytsm.get_channel('test'))
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
+        self.assertEqual(Channel('test', 'Name', 'URL', True, 'thumbnail'), self.ytsm.get_channel('test'))
 
     def test__add_channel_raises_ChannelAlreadyExists(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
-        self.assertRaises(YTSubManager.ChannelAlreadyExists, self.ytsm._add_channel, 'test', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
+        self.assertRaises(YTSubManager.ChannelAlreadyExists, self.ytsm._add_channel, 'test', 'Name', 'URL', 'thumbnail')
 
     def test_get_channel(self):
-        self.ytsm._add_channel('test', 'Channel Name', 'URL')
-        self.assertEqual(Channel('test', 'Channel Name', 'URL'), self.ytsm.get_channel('test'))
+        self.ytsm._add_channel('test', 'Channel Name', 'URL', 'thumbnail')
+        self.assertEqual(Channel('test', 'Channel Name', 'URL', True, 'thumbnail'), self.ytsm.get_channel('test'))
 
     def test_get_channel_raises_ChannelDoesNotExist(self):
         self.assertRaises(YTSubManager.ChannelDoesNotExist, self.ytsm.get_channel, '666')
 
     def test_remove_channel(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
         self.ytsm.remove_channel('test')
         self.assertRaises(YTSubManager.ChannelDoesNotExist, self.ytsm.get_channel, 'test')
 
     def test_find_channels(self):
         # Also check case-insensitive
-        self.ytsm._add_channel('1', 'TEST', 'URL')
-        self.ytsm._add_channel('2', 'aTest', 'URL')
-        self.ytsm._add_channel('3', 'tEStA', 'URL')
-        self.ytsm._add_channel('4', 'atEsTa', 'URL')
-        self.ytsm._add_channel('5', 'not', 'URL')
+        self.ytsm._add_channel('1', 'TEST', 'URL', 'thumbnail')
+        self.ytsm._add_channel('2', 'aTest', 'URL', 'thumbnail')
+        self.ytsm._add_channel('3', 'tEStA', 'URL', 'thumbnail')
+        self.ytsm._add_channel('4', 'atEsTa', 'URL', 'thumbnail')
+        self.ytsm._add_channel('5', 'not', 'URL', 'thumbnail')
 
         self.assertEqual([
-            Channel('1', 'TEST', 'URL'),
-            Channel('2', 'aTest', 'URL'),
-            Channel('3', 'tEStA', 'URL'),
-            Channel('4', 'atEsTa', 'URL')], self.ytsm.find_channels('test'))
+            Channel('1', 'TEST', 'URL', True, 'thumbnail'),
+            Channel('2', 'aTest', 'URL', True, 'thumbnail'),
+            Channel('3', 'tEStA', 'URL', True, 'thumbnail'),
+            Channel('4', 'atEsTa', 'URL', True, 'thumbnail')], self.ytsm.find_channels('test'))
 
     def test_get_all_channels(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
-        self.ytsm._add_channel('test2', 'Name', 'URL')
-        self.ytsm._add_channel('test3', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
+        self.ytsm._add_channel('test2', 'Name', 'URL', 'thumbnail')
+        self.ytsm._add_channel('test3', 'Name', 'URL', 'thumbnail')
 
         self.assertEqual([
-            Channel('test', 'Name', 'URL'),
-            Channel('test2', 'Name', 'URL'),
-            Channel('test3', 'Name', 'URL')], self.ytsm.get_all_channels())
+            Channel('test', 'Name', 'URL', True, 'thumbnail'),
+            Channel('test2', 'Name', 'URL', True, 'thumbnail'),
+            Channel('test3', 'Name', 'URL', True, 'thumbnail')], self.ytsm.get_all_channels())
 
     def test__add_video(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
         self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.assertEqual(Video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail', True, False),
                          self.ytsm.get_video('test'))
@@ -196,7 +206,7 @@ class TestYTSubManager(TestCase):
     def test__add_video_max_videos(self):
         # Check older videos get deleted to make place for new ones when they reach the SETTINGS limit
         SETTINGS.advanced_settings.max_videos_per_channel = 5
-        self.ytsm._add_channel('test', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
         self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-06', 'Desc', 'Thumbnail')  # Check its by pubdate
         self.ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-02', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test3', 'test', 'Name', 'Url', '22-02-03', 'Desc', 'Thumbnail')
@@ -219,13 +229,13 @@ class TestYTSubManager(TestCase):
                           '22-02-01', 'Desc', 'Thumbnail')
 
     def test__add_video_raises_VideoAlreadyExists(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
         self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.assertRaises(YTSubManager.VideoAlreadyExists, self.ytsm._add_video, 'test', 'test', 'Name', 'Url',
                           '22-02-01', 'Desc', 'Thumbnail')
 
     def test_get_video(self):
-        self.ytsm._add_channel('test', 'Test Name', 'URL')
+        self.ytsm._add_channel('test', 'Test Name', 'URL', 'thumbnail')
         self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.assertEqual(Video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail', True, False),
                          self.ytsm.get_video('test'))
@@ -234,8 +244,8 @@ class TestYTSubManager(TestCase):
         self.assertRaises(YTSubManager.VideoDoesNotExist, self.ytsm.get_video, 'test')
 
     def test_find_video_by_name(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
-        self.ytsm._add_channel('test2', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
+        self.ytsm._add_channel('test2', 'Name', 'URL', 'thumbnail')
         self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test2', 'test', 'aNaMe', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test3', 'test', 'nAMEa', 'Url', '22-02-01', 'Desc', 'Thumbnail')
@@ -266,8 +276,8 @@ class TestYTSubManager(TestCase):
         self.assertEqual([], self.ytsm.find_video_by_name('666', channel_id='test'))
 
     def test_find_video_by_desc(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
-        self.ytsm._add_channel('test2', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
+        self.ytsm._add_channel('test2', 'Name', 'URL', 'thumbnail')
         self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-01', 'adEsc', 'Thumbnail')
         self.ytsm._add_video('test3', 'test', 'Name', 'Url', '22-02-01', 'DeSCa', 'Thumbnail')
@@ -298,8 +308,8 @@ class TestYTSubManager(TestCase):
         self.assertEqual([], self.ytsm.find_video_by_desc('666', channel_id='test'))
 
     def test_get_all_videos(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
-        self.ytsm._add_channel('test2', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
+        self.ytsm._add_channel('test2', 'Name', 'URL', 'thumbnail')
         self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test3', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
@@ -329,7 +339,7 @@ class TestYTSubManager(TestCase):
         self.assertEqual([], self.ytsm.get_all_videos(channel_id='666'))
 
     def test_mark_video_as_old(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
         self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm.mark_video_as_old('test')
@@ -337,7 +347,7 @@ class TestYTSubManager(TestCase):
         self.assertEqual(True, self.ytsm.get_video('test2').new)
 
     def test_mark_all_videos_old(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
         self.ytsm._add_video('test1', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm.mark_all_videos_old('test')
@@ -345,7 +355,7 @@ class TestYTSubManager(TestCase):
         self.assertEqual(False, self.ytsm.get_video('test2').new)
 
     def test_mark_video_as_watched(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
         self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm.mark_video_as_watched('test')
@@ -353,7 +363,7 @@ class TestYTSubManager(TestCase):
         self.assertEqual(False, self.ytsm.get_video('test2').watched)
 
     def test_mark_all_videos_watched(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
         self.ytsm._add_video('test1', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm.mark_all_videos_watched('test')
@@ -361,8 +371,8 @@ class TestYTSubManager(TestCase):
         self.assertEqual(True, self.ytsm.get_video('test2').watched)
 
     def test_get_all_new_videos(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
-        self.ytsm._add_channel('test2', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
+        self.ytsm._add_channel('test2', 'Name', 'URL', 'thumbnail')
         self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test3', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
@@ -398,8 +408,8 @@ class TestYTSubManager(TestCase):
         self.assertEqual([], self.ytsm.get_all_new_videos(channel_id='666'))
 
     def test_get_all_unwatched_videos(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
-        self.ytsm._add_channel('test2', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
+        self.ytsm._add_channel('test2', 'Name', 'URL', 'thumbnail')
         self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test3', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
@@ -435,8 +445,8 @@ class TestYTSubManager(TestCase):
         self.assertEqual([], self.ytsm.get_all_unwatched_videos(channel_id='666'))
 
     def test_get_all_videos_by_date_range(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
-        self.ytsm._add_channel('test2', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
+        self.ytsm._add_channel('test2', 'Name', 'URL', 'thumbnail')
         self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-02', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test3', 'test', 'Name', 'Url', '22-02-03', 'Desc', 'Thumbnail')
@@ -467,8 +477,8 @@ class TestYTSubManager(TestCase):
         self.assertEqual([], self.ytsm.get_all_videos_by_date_range('22-02-01', '22-02-03', channel_id='666'))
 
     def test_get_amt_videos(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
-        self.ytsm._add_channel('test2', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
+        self.ytsm._add_channel('test2', 'Name', 'URL', 'thumbnail')
         self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-02', 'Desc', 'Thumbnail')
         self.ytsm._add_video('test3', 'test', 'Name', 'Url', '22-02-03', 'Desc', 'Thumbnail')
@@ -479,18 +489,18 @@ class TestYTSubManager(TestCase):
         self.assertEqual((0, 0, 0), self.ytsm.get_amt_videos(channel_id='666'))
 
     def test__remove_video(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
         self.ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm._remove_video('test')
         self.assertRaises(self.ytsm.VideoDoesNotExist, self.ytsm.get_video, 'test')
 
     def test_set_notify_on_status_false(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
         self.ytsm.set_notify_on_status_false('test')
         self.assertEqual(False, self.ytsm.get_channel('test').notify_on)
 
     def test_set_notify_on_status_true(self):
-        self.ytsm._add_channel('test', 'Name', 'URL')
+        self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
         self.ytsm.set_notify_on_status_false('test')
         self.ytsm.set_notify_on_status_true('test')
         self.assertEqual(True, self.ytsm.get_channel('test').notify_on)

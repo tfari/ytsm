@@ -7,7 +7,8 @@ class Channel:
     idx: str
     name: str
     url: str
-    notify_on: bool = True
+    notify_on: bool
+    thumbnail: str
 
 @dataclass
 class Video:

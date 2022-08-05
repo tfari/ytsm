@@ -19,6 +19,7 @@ class YTScraper:
     _rss_base_url = 'https://www.youtube.com/feeds/videos.xml?channel_id=%s'
     _supported_url_types = ['youtube.com/watch?v=', 'youtube.com/channel', 'youtube.com/user/', 'youtube.com/c/']
     _channel_id_re = re.compile(r'channelId" content="(?P<channel_id>[\w\-]+)"')
+    _channel_thumbnail_re = re.compile(r'"url":"https://yt3(?P<channel_thumbnail>[\w\-./_:]+)=')
 
     def __init__(self):
         self.scrap_wrapper = ScrapWrapper(headers=None)
@@ -49,9 +50,9 @@ class YTScraper:
         """ Clears the cache """
         self.cache = {}
 
-    def get_channel_id_from_url(self, input_url: str) -> str:
+    def get_channel_id_and_thumbnail_from_url(self, input_url: str) -> tuple[str, str]:
         """
-        Gets a Channel's id from an url.
+        Gets a Channel's id and thumbnail from an url.
 
         :raise UrLNotYT: If the url is not a YT url.
         :raise YTUrlNotSupported: If the url is a YT url but is not supported
@@ -59,15 +60,18 @@ class YTScraper:
         :raise YTUrlUnexpectedStatusCode: If the GET failed with a status code other than 404.
         :raise GettingError: If the GET request itself failed.
         :raise ChannelIDParsingError: If parsing failed.
-        watch?v= urls don't return 404 when they don't exist, so if input_url was one of those it
+        watch?v= urls don't return 404 when they don't exist, so if input_url was one of those, it
         could very well mean 404.
 
-        :return Channel's id: str
+        :raise ChannelThumbnailParsingError: If parsing failed.
+
+        :return tuple: (channel_id, channel_thumbnail)
         """
         self._validate_url(input_url)  # Raises URLNotYT, YTURLNotSupported
         fixed_url = self._fix_schema(input_url)
         html = self._get_url(fixed_url)
-        return self._extract_channel_id_from_html(html, fixed_url)
+        return self._extract_channel_id_from_html(html, fixed_url), \
+               self._extract_channel_thumbnail_url_from_html(html, fixed_url)
 
     def _extract_channel_id_from_html(self, html: str, input_url: str) -> str:
         """
@@ -78,6 +82,16 @@ class YTScraper:
         if match:
             return match.group('channel_id')
         raise self.ChannelIDParsingError(input_url)
+
+    def _extract_channel_thumbnail_url_from_html(self, html: str, input_url: str) -> str:
+        """
+        Extract channel_thumbnail url from a query's html.
+        :raise ChannelThumbnailParsingError: If parsing failed.
+        """
+        match = re.search(self._channel_thumbnail_re, html)
+        if match:
+            return f'https://yt3{match.group("channel_thumbnail")}'
+        raise self.ChannelThumbnailParsingError(input_url)
 
     def get_channel_information(self, channel_id: str) -> dict:
         """
@@ -263,6 +277,9 @@ class YTScraper:
 
     class ChannelIDParsingError(ParsingError):
         """ Parsing error attempting to parse channel id """
+
+    class ChannelThumbnailParsingError(ParsingError):
+        """ Parsing error attempting to parse channel thumbnail """
 
     class ChannelInfoParsingError(ParsingError):
         """ Parsing error attempting to parse channel information """

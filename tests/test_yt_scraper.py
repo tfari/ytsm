@@ -42,31 +42,42 @@ class TestYTScraper(TestCase):
         self.ytscraper.clear_cache()
         self.assertEqual({}, self.ytscraper.cache)
 
-    def test_get_channel_id_from_url(self):
-        self.ytscraper._get_url = lambda x: 'channelId" content="UCupvZG-5ko_eiXAupbDfxWw"extra_text'
-        self.assertEqual('UCupvZG-5ko_eiXAupbDfxWw', self.ytscraper.get_channel_id_from_url(
+    def test_get_channel_id_and_thumbnail_from_url(self):
+        self.ytscraper._get_url = lambda x: 'channelId" content="UCupvZG-5ko_eiXAupbDfxWw"extra_text ' \
+                                            '"url":"https://yt3.ggpht.com' \
+                                            '/FJzSJC_BbfPzbDW0JUF1Jbc5Q3bELn4ntoAmzS0sNlxQEuEXnMwkhI1r1dKpRbnicd60tdwy'\
+                                            'rlc=s88-c-k-c0x00ffffff-no-rj"afafaf" '
+
+        expected = ('UCupvZG-5ko_eiXAupbDfxWw',
+                    'https://yt3.ggpht.com/FJzSJC_BbfPzbDW0JUF1Jbc5Q3bELn4ntoAmzS0sNlxQEuEXnMwkhI1r1dKpRbnicd60tdwyrlc')
+        self.assertEqual(expected, self.ytscraper.get_channel_id_and_thumbnail_from_url(
             'https://youtube.com/channel/test'))
 
-    def test_get_channel_id_from_url_lets_raises_escalate(self):
-        self.assertRaises(YTScraper.UrlNotYT, self.ytscraper.get_channel_id_from_url, 'test.com')
+    def test_get_channel_id_and_thumbnail_from_url_lets_raises_escalate(self):
+        self.assertRaises(YTScraper.UrlNotYT, self.ytscraper.get_channel_id_and_thumbnail_from_url, 'test.com')
 
-        self.assertRaises(YTScraper.YTUrlNotSupported, self.ytscraper.get_channel_id_from_url, 'youtube.com/test')
+        self.assertRaises(YTScraper.YTUrlNotSupported, self.ytscraper.get_channel_id_and_thumbnail_from_url, 'youtube.com/test')
 
         valid_yt_url_for_m_patched_raises = 'youtube.com/channel/test'
         self.ytscraper._get_url = lambda x: self._raiser_helper(YTScraper.YTUrl404('666'))
-        self.assertRaises(YTScraper.YTUrl404, self.ytscraper.get_channel_id_from_url, valid_yt_url_for_m_patched_raises)
+        self.assertRaises(YTScraper.YTUrl404, self.ytscraper.get_channel_id_and_thumbnail_from_url, valid_yt_url_for_m_patched_raises)
 
         self.ytscraper._get_url = lambda x: self._raiser_helper(YTScraper.YTUrlUnexpectedStatusCode('666'))
         self.assertRaises(YTScraper.YTUrlUnexpectedStatusCode,
-                          self.ytscraper.get_channel_id_from_url, valid_yt_url_for_m_patched_raises)
+                          self.ytscraper.get_channel_id_and_thumbnail_from_url, valid_yt_url_for_m_patched_raises)
 
         self.ytscraper._get_url = lambda x: self._raiser_helper(YTScraper.GettingError('666'))
         self.assertRaises(YTScraper.GettingError,
-                          self.ytscraper.get_channel_id_from_url, valid_yt_url_for_m_patched_raises)
+                          self.ytscraper.get_channel_id_and_thumbnail_from_url, valid_yt_url_for_m_patched_raises)
 
         self.ytscraper._get_url = lambda x: '666'  # No need to monkeypatch _extract_channel_id_from_html, just pass 666
         self.assertRaises(YTScraper.ChannelIDParsingError,
-                          self.ytscraper.get_channel_id_from_url, valid_yt_url_for_m_patched_raises)
+                          self.ytscraper.get_channel_id_and_thumbnail_from_url, valid_yt_url_for_m_patched_raises)
+
+        self.ytscraper._get_url = lambda x: '666'
+        self.ytscraper._extract_channel_id_from_html = lambda x, y: '666'
+        self.assertRaises(YTScraper.ChannelThumbnailParsingError,
+                          self.ytscraper.get_channel_id_and_thumbnail_from_url, valid_yt_url_for_m_patched_raises)
 
     def test__extract_channel_id_from_html(self):
         # Simple
@@ -75,6 +86,17 @@ class TestYTScraper(TestCase):
 
     def test__extract_channel_id_from_html_raises_ChannelIDParsingError(self):
         self.assertRaises(YTScraper.ChannelIDParsingError, self.ytscraper._extract_channel_id_from_html, '666', 'test')
+
+    def test__extract_channel_thumbnail_url_from_html(self):
+        expected = 'https://yt3.ggpht.com/FJzSJC_BbfPzbDW0JUF1Jbc5Q3bELn4ntoAmzS0sNlxQEuEXnMwkhI1r1dKpRbnicd60tdwyrlc'
+        test = '"url":"https://yt3.ggpht.com' \
+               '/FJzSJC_BbfPzbDW0JUF1Jbc5Q3bELn4ntoAmzS0sNlxQEuEXnMwkhI1r1dKpRbnicd60tdwyrlc=s88' \
+               '-c-k-c0x00ffffff-no-rj"afafaf'
+        self.assertEqual(expected, self.ytscraper._extract_channel_thumbnail_url_from_html(test, 'test'))
+
+    def test__extract_channel_thumbnail_url_from_html_raises_ChannelThumbnailParsingError(self):
+        self.assertRaises(YTScraper.ChannelThumbnailParsingError,
+                          self.ytscraper._extract_channel_thumbnail_url_from_html, '666', 'test')
 
     def test_get_channel_information(self):
         with open(XML_EXAMPLE_CNN, 'r', encoding='utf-8') as r_file:

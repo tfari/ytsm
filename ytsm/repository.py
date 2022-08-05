@@ -16,7 +16,7 @@ class AbstractRepository(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def add_channel(self, channel_id: str, channel_name: str, channel_uri: str) -> None:
+    def add_channel(self, channel_id: str, channel_name: str, channel_uri: str, thumbnail_url: str) -> None:
         """
         Add a Channel to the database
         :raises ObjectAlreadyExist: if there is already a Channel with channel_id
@@ -160,13 +160,14 @@ class SQLiteRepository(AbstractRepository):
         found = self.cur.fetchone()[0]
         return found
 
-    def add_channel(self, channel_id: str, channel_name: str, channel_url: str) -> None:
+    def add_channel(self, channel_id: str, channel_name: str, channel_url: str, thumbnail_url: str) -> None:
         """
         Add a Channel to the database
         :raises ObjectAlreadyExist: if there is already a Channel with channel_id
         """
         try:
-            self.cur.execute('INSERT into channels values(?, ?, ?, ?)', (channel_id, channel_name, channel_url, True))
+            self.cur.execute('INSERT into channels values(?, ?, ?, ?, ?)', (channel_id, channel_name, channel_url,
+                                                                            True, thumbnail_url))
             self.con.commit()
         except sqlite3.IntegrityError:
             raise self.ObjectAlreadyExists(channel_id)

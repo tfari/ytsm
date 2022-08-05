@@ -19,7 +19,7 @@ class TestYTSMController(TestCase):
         self.ytsmc = YTSMController(self._ytsm)
 
     def test_make_channel_dto(self):
-        self._ytsm._add_channel('test', 'Test', 'abcd')
+        self._ytsm._add_channel('test', 'Test', 'abcd', 'thumbnail')
         c = self._ytsm.get_channel('test')
         self._ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self._ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
@@ -32,15 +32,15 @@ class TestYTSMController(TestCase):
         self.assertEqual(expected_cdto, self.ytsmc.make_channel_dto(c))
 
     def test_make_video_dto(self):
-        self._ytsm._add_channel('test', 'Test', 'abcd')
+        self._ytsm._add_channel('test', 'Test', 'abcd', 'thumbnail')
         self._ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         video = self._ytsm.get_video('test')
         expected_vdto = YTSMController.VideoDTO(video=video, channel_name='Test')
         self.assertEqual(expected_vdto, self.ytsmc.make_video_dto(video))
 
     def test_get_channel_dto_list(self):
-        self._ytsm._add_channel('test', 'bTest', 'abcd')  # Check sorting (bTest / aTest)
-        self._ytsm._add_channel('test2', 'aTest', 'abcd')
+        self._ytsm._add_channel('test', 'bTest', 'abcd', 'thumbnail')  # Check sorting (bTest / aTest)
+        self._ytsm._add_channel('test2', 'aTest', 'abcd', 'thumbnail')
 
         c = self._ytsm.get_channel('test')
         c1 = self._ytsm.get_channel('test2')
@@ -48,8 +48,8 @@ class TestYTSMController(TestCase):
         self.assertEqual(expected, self.ytsmc.get_channel_dto_list())
 
     def test_set_channel_search_term(self):
-        self._ytsm._add_channel('test', 'Test', 'abcd')
-        self._ytsm._add_channel('test2', '666', 'abcd')
+        self._ytsm._add_channel('test', 'Test', 'abcd', 'thumbnail')
+        self._ytsm._add_channel('test2', '666', 'abcd', 'thumbnail')
         c1 = self._ytsm.get_channel('test2')
         expected = [YTSMController.ChannelDTO(c1, 0, 0, 0)]
         self.ytsmc.set_channel_search_term('666')
@@ -57,8 +57,8 @@ class TestYTSMController(TestCase):
 
     def test_get_video_dto_list(self):
         # Set up
-        self._ytsm._add_channel('test', 'Test', 'abcd')
-        self._ytsm._add_channel('test2', 'Test2', 'abcd')
+        self._ytsm._add_channel('test', 'Test', 'abcd', 'thumbnail')
+        self._ytsm._add_channel('test2', 'Test2', 'abcd', 'thumbnail')
         self._ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-04', 'Desc', 'Thumbnail')
         self._ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-03', 'Desc', 'Thumbnail')
         self._ytsm._add_video('test3', 'test2', 'Name', 'Url', '22-02-02', 'Desc', 'Thumbnail')
@@ -82,8 +82,8 @@ class TestYTSMController(TestCase):
 
     def test_set_video_filter(self):
         # Set up
-        self._ytsm._add_channel('test', 'Test', 'abcd')
-        self._ytsm._add_channel('test2', 'Test2', 'abcd')
+        self._ytsm._add_channel('test', 'Test', 'abcd', 'thumbnail')
+        self._ytsm._add_channel('test2', 'Test2', 'abcd', 'thumbnail')
         self._ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-04', 'Desc', 'Thumbnail')
         self._ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-03', 'Desc', 'Thumbnail')
         self._ytsm._add_video('test3', 'test2', 'Name', 'Url', '22-02-02', 'Desc', 'Thumbnail')
@@ -123,8 +123,8 @@ class TestYTSMController(TestCase):
 
     def test_set_video_search_type_and_term(self):
         # Set up
-        self._ytsm._add_channel('test', 'Test', 'abcd')
-        self._ytsm._add_channel('test2', 'Test2', 'abcd')
+        self._ytsm._add_channel('test', 'Test', 'abcd', 'thumbnail')
+        self._ytsm._add_channel('test2', 'Test2', 'abcd', 'thumbnail')
         self._ytsm._add_video('test', 'test', '666', 'Url', '2022-02-01', 'Desc', 'Thumbnail')
         self._ytsm._add_video('test2', 'test', 'Name', 'Url', '2022-02-03', '666', 'Thumbnail')
         self._ytsm._add_video('test3', 'test2', '666', 'Url', '2022-02-04', 'Desc', 'Thumbnail')
@@ -177,7 +177,7 @@ class TestYTSMController(TestCase):
 
     def test_add_channel(self):
         # Assert it calls ytsm.add_channel, and returns the channel with the id that ytsm returns
-        self._ytsm._add_channel('666', 'Test', 'ads')
+        self._ytsm._add_channel('666', 'Test', 'ads', 'thumbnail')
         c = self._ytsm.get_channel('666')
         self._ytsm.add_channel = lambda x: '666'
         self.assertEqual(c, self.ytsmc.add_channel('test'))
@@ -191,20 +191,20 @@ class TestYTSMController(TestCase):
         self.assertRaises(YTSMController.AddChannelError, self.ytsmc.add_channel, '666')
 
     def test_remove_channel(self):
-        self._ytsm._add_channel('test', 'Test', 'abc')
+        self._ytsm._add_channel('test', 'Test', 'abc', 'thumbnail')
         c = self._ytsm.get_channel('test')
         self.ytsmc.remove_channel(YTSMController.ChannelDTO(c, 0, 0, 0))
         self.assertEqual([], self.ytsmc.get_channel_dto_list())
         self.assertEqual([], self._ytsm.get_all_channels())
 
     def test_mark_channel_all_watched(self):
-        self._ytsm._add_channel('test', 'Test', 'abc')
+        self._ytsm._add_channel('test', 'Test', 'abc', 'thumbnail')
         self._ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self._ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self._ytsm._add_video('test3', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
 
         # OTHERS
-        self._ytsm._add_channel('666', 'Test', 'abc')
+        self._ytsm._add_channel('666', 'Test', 'abc', 'thumbnail')
         self._ytsm._add_video('test4', '666', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
 
         c = self._ytsm.get_channel('test')
@@ -213,13 +213,13 @@ class TestYTSMController(TestCase):
         self.assertEqual([], self._ytsm.get_all_unwatched_videos(channel_id='test'))
 
     def test_update_channel(self):
-        self._ytsm._add_channel('test', 'Test', 'abc')
+        self._ytsm._add_channel('test', 'Test', 'abc', 'thumbnail')
         c = self._ytsm.get_channel('test')
         self._ytsm.update_channel = lambda x: x.upper()  # This way we also test the channel_id was passed
         self.assertEqual('TEST', self.ytsmc.update_channel(YTSMController.ChannelDTO(c, 0, 0, 0)))
 
     def test_update_channel_raises_UpdateChannelError(self):
-        self._ytsm._add_channel('test', 'Test', 'abc')
+        self._ytsm._add_channel('test', 'Test', 'abc', 'thumbnail')
         c = self._ytsm.get_channel('test')
 
         def raiser(x):
@@ -231,9 +231,9 @@ class TestYTSMController(TestCase):
         self.assertRaises(YTSMController.UpdateChannelError, self.ytsmc.update_channel, cdto)
 
     def test_update_all_channels(self):
-        self._ytsm._add_channel('test', 'Test', 'abc')
-        self._ytsm._add_channel('test2', 'Test', 'abc')
-        self._ytsm._add_channel('test3', 'Test', 'abc')
+        self._ytsm._add_channel('test', 'Test', 'abc', 'thumbnail')
+        self._ytsm._add_channel('test2', 'Test', 'abc', 'thumbnail')
+        self._ytsm._add_channel('test3', 'Test', 'abc', 'thumbnail')
         self._ytsm.update_all_channels = lambda: {'total': 666, 'test': 1, 'test2': 2, 'test3': 8}
         expected = {'total': 666, 'details': [('Test', 1), ('Test', 2), ('Test', 8)]}
         self.assertEqual(expected, self.ytsmc.update_all_channels())
@@ -246,7 +246,7 @@ class TestYTSMController(TestCase):
         self.assertRaises(YTSMController.UpdateAllChannelsError, self.ytsmc.update_all_channels)
 
     def test_mark_video_watched(self):
-        self._ytsm._add_channel('test', 'Test', 'abc')
+        self._ytsm._add_channel('test', 'Test', 'abc', 'thumbnail')
         self._ytsm._add_video('test', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         v = self._ytsm.get_video('test')
         self.ytsmc.mark_video_watched(YTSMController.VideoDTO(v, 'Test'))
@@ -256,7 +256,7 @@ class TestYTSMController(TestCase):
 
     @mock.patch("webbrowser.open")
     def test_watch_video(self, mocked_fun):
-        self._ytsm._add_channel('test', 'Test', 'abc')
+        self._ytsm._add_channel('test', 'Test', 'abc', 'thumbnail')
         self._ytsm._add_video('test', 'test', 'Name', '666', '22-02-01', 'Desc', 'Thumbnail')
         v = self._ytsm.get_video('test')
         self.ytsmc.watch_video(YTSMController.VideoDTO(v, 'Test'))
@@ -272,7 +272,7 @@ class TestYTSMController(TestCase):
         mocked_fun.assert_called_with('https://youtube.com/channel/666')
 
     def test_toggle_mute_channel(self):
-        self._ytsm._add_channel('test', 'Test', 'abc')
+        self._ytsm._add_channel('test', 'Test', 'abc', 'thumbnail')
         self.ytsmc.toggle_mute_channel(YTSMController.ChannelDTO(self._ytsm.get_channel('test'), 0, 0, 0))
         self.assertEqual(False, self._ytsm.get_channel('test').notify_on)
         self.ytsmc.toggle_mute_channel(YTSMController.ChannelDTO(self._ytsm.get_channel('test'), 0, 0, 0))
@@ -280,3 +280,10 @@ class TestYTSMController(TestCase):
         self.ytsmc.toggle_mute_channel(YTSMController.ChannelDTO(self._ytsm.get_channel('test'), 0, 0, 0))
         self.assertEqual(False, self._ytsm.get_channel('test').notify_on)
 
+    def test_get_channel_dto_from_id(self):
+        self._ytsm._add_channel('test', 'Test', 'abc', 'thumbnail')
+        c = self._ytsm.get_channel('test')
+        self.assertEqual(YTSMController.ChannelDTO(c, 0, 0, 0), self.ytsmc.get_channel_dto_from_id('test'))
+
+    def test_get_channel_dto_from_id_raises_ChannelIDNotFound(self):
+        self.assertRaises(YTSMController.ChannelIDNotFound, self.ytsmc.get_channel_dto_from_id, '666')

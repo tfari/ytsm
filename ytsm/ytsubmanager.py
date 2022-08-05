@@ -25,9 +25,9 @@ class YTSubManager:
         """
         # 1 - Get channel ID
         try:
-            channel_id = self.scraper.get_channel_id_from_url(url)
+            channel_id, thumbnail_url = self.scraper.get_channel_id_and_thumbnail_from_url(url)
         except self.scraper.YTScraperError as e:
-            raise self.ScraperError(f'Error getting channel id: {e.__class__.__name__} - "{str(e)}"')
+            raise self.ScraperError(f'Error getting channel id and thumbnail: {e.__class__.__name__} - "{str(e)}"')
 
         # 2 - Check if channel already exists
         try:
@@ -42,7 +42,7 @@ class YTSubManager:
         except self.scraper.YTScraperError as e:
             raise self.ScraperError(f'Error getting channel information: {str(type(e))} - {channel_id}')
         # 4 - Create channel
-        self._add_channel(channel_info['id'], channel_info['name'], channel_info['url'])
+        self._add_channel(channel_info['id'], channel_info['name'], channel_info['url'], thumbnail_url)
         # 5 - Update channel
         self.update_channel(channel_id, use_cache=True)
 
@@ -130,13 +130,13 @@ class YTSubManager:
         except self.repository.ObjectDoesNotExist:
             raise self.ChannelDoesNotExist(channel_id)
 
-    def _add_channel(self, channel_id: str, channel_name: str, channel_url: str) -> None:
+    def _add_channel(self, channel_id: str, channel_name: str, channel_url: str, thumbnail_url: str) -> None:
         """
         Add Channel to DB
         :raise ChannelAlreadyExists(channel_id)
         """
         try:
-            self.repository.add_channel(channel_id, channel_name, channel_url)
+            self.repository.add_channel(channel_id, channel_name, channel_url, thumbnail_url)
         except AbstractRepository.ObjectAlreadyExists:
             raise self.ChannelAlreadyExists(channel_id)
 
