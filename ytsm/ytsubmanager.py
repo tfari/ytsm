@@ -1,4 +1,4 @@
-""" Main entry point """
+""" CRUD Interface for accessing the repository and scraper"""
 from typing import Optional
 
 from ytsm.repository import AbstractRepository
@@ -7,7 +7,7 @@ from ytsm.model import Channel, Video
 
 
 class YTSubManager:
-    """ Main entry point for using the application """
+    """ Main interface for using the application, specifically the db and scraper. """
     def __init__(self, *, repository: AbstractRepository):
         self.repository = repository
         self.scraper = YTScraper()

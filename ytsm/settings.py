@@ -3,7 +3,9 @@ GLOBAL SETTINGS ACCESS
 Implements the following constants:
 SETTINGS -> A global Settings() class to use as a Singleton
 NEW_VIDEO, UNWATCHED_VIDEO, OLD_VIDEO -> Constants for video tagging
-CLI_COLORS -> A list of valid colorama colors for click usage
+VALID_CLI_COLORS -> A list of valid colorama colors for click usage
+VALID_TUI_COLORS -> A list of valid urwid colors
+SQLITE_DB_CREATION_STATEMENTS -> A list of strings for generating the db structure
 """
 import dataclasses
 import json
@@ -205,7 +207,6 @@ class AdvancedSettings:
 
 class Settings:
     """ All Settings """
-
     def __init__(self):
         self.path = None
         self.gui_settings = GUISettings()
@@ -302,4 +303,5 @@ class Settings:
         """ Settings value is invalid """
 
 
+# Use as singleton
 SETTINGS = Settings()
