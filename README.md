@@ -14,7 +14,7 @@ or via the GUI.
 When searching for videos by date, the format the program understands is "YYYY-MM-DD YYYY-MM-DD", where the first 
 date is the lower range, and the second date the max range.
 
-## Textual User Interface
+## Text User Interface
 ![](https://github.com/tfari/ytsm/blob/main/images/tui-gif.gif)
 
 The TUI is implemented in urwid, which means it is not available for Windows. It provides two main ways of browsing the
