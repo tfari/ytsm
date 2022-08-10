@@ -43,7 +43,7 @@ class AboutView(Frame):
 
         # Grid
         self.about_label.grid(row=0, column=0, pady=10, sticky='ns')
-        self.about_text.grid(row=1, column=0, sticky='nsew')
+        self.about_text.grid(row=1, column=0, sticky='nsew', padx=10)
         self.about_text_scrollbar.grid(row=1, column=1, sticky='nsew')
         self.visit_repo_button.grid(row=2, column=0, sticky='nsew')
 
