@@ -1,5 +1,5 @@
 """ Tkinter based GUI """
-from tkinter import Tk, FLAT, messagebox, DISABLED
+from tkinter import Tk, FLAT, messagebox, DISABLED, CENTER
 from tkinter.font import Font
 from tkinter.ttk import Style, Notebook, Progressbar
 
@@ -21,6 +21,12 @@ class YTSMGUI(Tk):
 
         # Styling
         self.style = Style()
+
+        # Windows workaround
+        theme = self.style.theme_use('default')
+        self.style.theme_create('dummy', parent=theme)
+        self.style.theme_use('dummy')
+
         self.normal_font = None
         self.small_font = None
         self.medium_font = None
@@ -166,6 +172,7 @@ class YTSMGUI(Tk):
                              insertcolor=SETTINGS.gui_settings.colorscheme.foreground,
                              borderwidth=0,
                              padding=(5, 3),
+                             font=self.normal_font,
                              )
         self.style.map('TEntry', fieldbackground=[("focus", SETTINGS.gui_settings.colorscheme.entry_box_active)])
 
@@ -194,7 +201,7 @@ class YTSMGUI(Tk):
                                    ("disabled", SETTINGS.gui_settings.colorscheme.background)])
 
         # TButton
-        self.style.configure('TButton', relief=FLAT, font=self.medium_font)
+        self.style.configure('TButton', relief=FLAT, font=self.medium_font, anchor=CENTER)
         self.style.map('TButton', relief=[("active", FLAT)],
                        background=[("pressed", SETTINGS.gui_settings.colorscheme.accent),
                                    ("active", SETTINGS.gui_settings.colorscheme.background_active)])
