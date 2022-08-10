@@ -40,7 +40,6 @@ class AboutView(Frame):
                                        highlightcolor=SETTINGS.gui_settings.colorscheme.background,
                                        foreground=SETTINGS.gui_settings.colorscheme.foreground_inactive)
 
-
         # Grid
         self.about_label.grid(row=0, column=0, pady=10, sticky='ns')
         self.about_text.grid(row=1, column=0, sticky='nsew', padx=10)
