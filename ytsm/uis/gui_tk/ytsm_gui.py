@@ -1,4 +1,6 @@
 """ Tkinter based GUI """
+import platform
+
 from tkinter import Tk, FLAT, messagebox, DISABLED, CENTER
 from tkinter.font import Font
 from tkinter.ttk import Style, Notebook, Progressbar
@@ -22,10 +24,11 @@ class YTSMGUI(Tk):
         # Styling
         self.style = Style()
 
-        # Windows workaround
-        theme = self.style.theme_use('default')
-        self.style.theme_create('dummy', parent=theme)
-        self.style.theme_use('dummy')
+        # Windows styling workaround (Have not tested on Darwin)
+        if platform.system() != 'Linux':
+            theme = self.style.theme_use('default')
+            self.style.theme_create('dummy', parent=theme)
+            self.style.theme_use('dummy')
 
         self.normal_font = None
         self.small_font = None
