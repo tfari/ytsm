@@ -1,6 +1,29 @@
 # ytsm
 ***YTSM*** is a YT Subscription manager. Add, remove, and update any channels you want to follow; watch and keep a
-log of the videos you have watched.
+log of the videos you have watched. ***YTSM*** uses YT's RSS feeds, which return information of the newest 15 videos of
+a Channel to maintain a local database of videos, by saving the last 100 videos for each Channel. The video information 
+can be updated by channel, or all at the same time, once can also get real-time notifications on updates by using the 
+command **notify-update**, which calls an update on all Channels, and then utilizes the "notify-send" tool to access 
+the system's notification tray. You can schedule the call of this command via something like cron, as well as keeping 
+any Channels muted, if you don't want to receive notifications for any specific ones.
+
+***YTSM*** provides cli, tui, and gui frontends to access and modify the data, as well as launch the videos in your 
+default browser. The three can be configured via the settings.json file in the data folder, or via the GUI.
+
+When filtering data via dates, the format the program understands is "YYYY-MM-DD YYYY-MM-DD", where the first date is
+the lower range, and the second date the max range.
+
+## Textual User Interface
+![](https://github.com/tfari/ytsm/blob/main/images/tui-gif.gif)
+
+The TUI is implemented in urwid, which means it is not available for Windows. It provides two main ways of browsing the
+data, by Channel, and by Video, each providing their own set of filters and search functions to better find what you 
+want.
+
+You can configure the colors and command keys via the settings.json file.
+
+![](https://github.com/tfari/ytsm/blob/main/images/tui-1.png)
+![](https://github.com/tfari/ytsm/blob/main/images/tui-2.png)
 
 ## Command-line usage
 ```
