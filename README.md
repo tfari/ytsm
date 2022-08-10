@@ -18,6 +18,7 @@ date is the lower range, and the second date the max range.
 ![](https://github.com/tfari/ytsm/blob/main/images/tui-gif.gif)
 
 `python ytsm.py tui`
+
 The TUI is implemented in urwid, which means it is not available for Windows. It provides two main ways of browsing the
 data, by Channel, and by Video, each providing their own set of filters and search functions to better find what you 
 want.
