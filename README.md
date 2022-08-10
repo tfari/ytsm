@@ -21,9 +21,7 @@ data, by Channel, and by Video, each providing their own set of filters and sear
 want.
 
 You can configure the colors and command keys via the settings.json file.
-
-![](https://github.com/tfari/ytsm/blob/main/images/tui-1.png)
-![](https://github.com/tfari/ytsm/blob/main/images/tui-2.png)
+![](https://github.com/tfari/ytsm/blob/main/images/tui-help.png)
 
 ## Command-line usage
 ```
