@@ -7,11 +7,12 @@ command **notify-update**, which calls an update on all Channels, and then utili
 the system's notification tray. You can schedule the call of this command via something like cron, as well as keeping 
 any Channels muted, if you don't want to receive notifications for any specific ones.
 
-***YTSM*** provides cli, tui, and gui frontends to access and modify the data, as well as launch the videos in your 
-default browser. The three can be configured via the settings.json file in the data folder, or via the GUI.
+***YTSM*** provides cli, tui, and gui frontends to access, filter, search, and modify the data, as well as 
+launch the videos in your default browser. The three can be configured via the settings.json file in the data folder, 
+or via the GUI.
 
-When filtering data via dates, the format the program understands is "YYYY-MM-DD YYYY-MM-DD", where the first date is
-the lower range, and the second date the max range.
+When searching for videos by date, the format the program understands is "YYYY-MM-DD YYYY-MM-DD", where the first 
+date is the lower range, and the second date the max range.
 
 ## Textual User Interface
 ![](https://github.com/tfari/ytsm/blob/main/images/tui-gif.gif)
