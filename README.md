@@ -19,7 +19,7 @@ date is the lower range, and the second date the max range.
 
 `python ytsm.py gui`
 
-The GUI provides two main ways of browsing the data, by Channel, and by Video, each providing their own set of filters
+The GUI provides two main ways of browsing the data, by Channel, and by Videos, each providing their own set of filters
 and search functions to better find what you want.
 
 The GUI is implemented in tk, which means it may not look the same in all platforms. However, the colors, fonts, and 
@@ -31,7 +31,7 @@ sizes can be configured via the Settings tab.
 `python ytsm.py tui`
 
 The TUI is implemented in urwid, which means it is not available for Windows. It provides two main ways of browsing the
-data, by Channel, and by Video, each providing their own set of filters and search functions to better find what you 
+data, by Channel, and by Videos, each providing their own set of filters and search functions to better find what you 
 want.
 
 You can configure the colors and command keys via the settings.json file.
