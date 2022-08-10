@@ -48,12 +48,12 @@ class YTSMGUI(Tk):
         self.channel_browser_view = ChannelBrowserView(self.main_window, self.ytsm_controller)
         self.all_videos_view = AllVideosView(self.main_window, self.ytsm_controller)
         self.settings_view = SettingsView(self.main_window, self.reload_styles)
-        # self.about_view = AboutView(self.main_window)
+        self.about_view = AboutView(self.main_window)
 
         self.main_window.add(self.channel_browser_view, text='Channel Browser', underline=0)
         self.main_window.add(self.all_videos_view, text='All Videos', underline=0)
         self.main_window.add(self.settings_view, text='Settings', underline=0)
-        # self.main_window.add(self.about_view, text='About', underline=0)
+        self.main_window.add(self.about_view, text='About', underline=0)
 
         # Set progressbar
         self.progress_bar = Progressbar(self, mode='determinate')

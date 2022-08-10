@@ -1,11 +1,12 @@
 # ytsm
 ***YTSM*** is a YT Subscription manager. Add, remove, and update any channels you want to follow; watch and keep a
 log of the videos you have watched. ***YTSM*** uses YT's RSS feeds, which return information of the newest 15 videos of
-a Channel to maintain a local database of videos, by saving the last 100 videos for each Channel. The video information 
-can be updated by channel, or all at the same time, once can also get real-time notifications on updates by using the 
-command **notify-update**, which calls an update on all Channels, and then utilizes the "notify-send" tool to access 
-the system's notification tray. You can schedule the call of this command via something like cron, as well as keeping 
-any Channels muted, if you don't want to receive notifications for any specific ones.
+a Channel, to maintain a local database of videos, by saving the last 100 videos for each Channel. The video 
+information can be updated by channel, or all at the same time, once can also get real-time notifications on updates by
+using the command **notify-update**, which calls an update on all Channels, and then utilizes the "notify-send" 
+(https://vaskovsky.net/notify-send/) tool to access the system's notification tray. You can schedule the call of this 
+command via something like cron, as well as keeping any Channels muted, if you don't want to receive notifications for 
+any specific ones.
 
 ***YTSM*** provides cli, tui, and gui frontends to access, filter, search, and modify the data, as well as 
 launch the videos in your default browser. The three can be configured via the settings.json file in the data folder, 

@@ -24,8 +24,8 @@ class VideoPane(Frame):
                                                     self.video_detail_box_frame,
                                                     self.callback_video_changes)
 
-        self.pane_win.add(self.video_selection_frame, weight=1)
-        self.pane_win.add(self.video_detail_box_frame, weight=1)
+        self.pane_win.add(self.video_selection_frame, weight=2)
+        self.pane_win.add(self.video_detail_box_frame, weight=0)
 
         # Grid
         self.pane_win.grid(column=0, row=0, sticky='nsew')
