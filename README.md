@@ -14,6 +14,17 @@ or via the GUI.
 When searching for videos by date, the format the program understands is "YYYY-MM-DD YYYY-MM-DD", where the first 
 date is the lower range, and the second date the max range.
 
+## Graphical User Interface
+![](https://github.com/tfari/ytsm/blob/main/images/gui-1.png)
+
+`python ytsm.py gui`
+
+The GUI provides two main ways of browsing the data, by Channel, and by Video, each providing their own set of filters
+and search functions to better find what you want.
+
+The GUI is implemented in tk, which means it may not look the same in all platforms. However, the colors, fonts, and 
+sizes can be configured via the Settings tab.
+
 ## Text User Interface
 ![](https://github.com/tfari/ytsm/blob/main/images/tui-gif.gif)
 
