@@ -24,6 +24,9 @@ class TestYTScraper(TestCase):
         self.assertEqual(test_url, self.ytscraper._fix_schema('abc.com'))
         self.assertEqual(test_url, self.ytscraper._fix_schema('http://abc.com'))
         self.assertEqual(test_url, self.ytscraper._fix_schema('https://abc.com'))
+        # Special case
+        self.assertEqual("https://abchttp.com", self.ytscraper._fix_schema("abchttp.com"))
+        self.assertEqual("https://abchttp.com", self.ytscraper._fix_schema("http://abchttp.com"))
 
     def test__validate_url(self):
         self.ytscraper._validate_url('youtube.com/watch?v=test')

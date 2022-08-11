@@ -29,9 +29,8 @@ class YTScraper:
     def _fix_schema(input_url) -> str:
         """ Force input_url to use https """
         if not input_url.startswith('https://'):
-            force_https = input_url.replace('http', 'https')
-            fixed_schema = f'https://{force_https}' if 'http' not in force_https else force_https
-            return fixed_schema
+            return f'https://{input_url}' if not input_url.startswith('http://') \
+                else input_url.replace('http://', 'https://')
         return input_url
 
     def _validate_url(self, input_url: str) -> None:
