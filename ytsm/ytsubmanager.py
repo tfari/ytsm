@@ -105,7 +105,7 @@ class YTSubManager:
                 if video['id'] != last_video.idx:
                     try:
                         self._add_video(video['id'], video['channel_id'], video['name'], video['url'], video['pubdate'],
-                                        video['description'], video['thumbnail'])
+                                        video['description'], video['thumbnail'], deferred_commit=True)
                         num_new_videos += 1
                     except self.VideoAlreadyExists:
                         pass
@@ -115,9 +115,10 @@ class YTSubManager:
         else:  # No videos
             for video in videos_dict_list:
                 self._add_video(video['id'], video['channel_id'], video['name'], video['url'], video['pubdate'],
-                                video['description'], video['thumbnail'])
+                                video['description'], video['thumbnail'], deferred_commit=True)
                 num_new_videos += 1
 
+        self.repository.call_commit()  # Commit changes
         return num_new_videos
 
     def _get_last_video_from_channel(self, channel_id: str) -> Optional[Video]:
@@ -163,15 +164,16 @@ class YTSubManager:
         return self.repository.get_all_channels()
 
     def _add_video(self, video_id: str, channel_id: str, video_name: str, video_url: str, video_pubdate: str,
-                   video_description: str, video_thumbnail: str) -> None:
+                   video_description: str, video_thumbnail: str, *, deferred_commit: bool = False) -> None:
         """
         Add a Video to the database
         :raises ChannelDoesNotExist: if Channel with channel_id does not exist in the database
         :raises VideoAlreadyExists: if there is already a Video with video_id
         """
         try:
+            # Added Videos are always New and Unwatched.
             self.repository.add_video(video_id, channel_id, video_name, video_url, video_pubdate, video_description,
-                                      video_thumbnail, True, False)  # Added Videos are always New and Unwatched.
+                                      video_thumbnail, True, False, deferred_commit=deferred_commit)
         except AbstractRepository.ObjectAlreadyExists:
             raise self.VideoAlreadyExists(video_id)
         except AbstractRepository.ObjectDoesNotExist:

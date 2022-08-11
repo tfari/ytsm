@@ -10,6 +10,10 @@ from ytsm.settings import SETTINGS, SQLITE_DB_CREATION_STATEMENTS
 class AbstractRepository(metaclass=ABCMeta):
     """ Abstract repository class """
     @abstractmethod
+    def call_commit(self) -> None:
+        """ Calls a commit on the DB """
+
+    @abstractmethod
     def amt_channel_videos(self, channel_id: str, video_type: str = 'all') -> int:
         """
         Returns the amount of videos in Channel with channel_id, specified by video_type = 'all', 'new', 'unwatched'
@@ -43,9 +47,12 @@ class AbstractRepository(metaclass=ABCMeta):
 
     @abstractmethod
     def add_video(self, video_id: str, channel_id: str, video_name: str, video_url: str, video_pubdate: str,
-                  video_description: str, video_thumbnail: str, video_new: bool, video_watched: bool) -> None:
+                  video_description: str, video_thumbnail: str, video_new: bool, video_watched: bool, *,
+                  deferred_commit: bool = False) -> None:
         """
         Add a Video to the database, if we are on the SETTINGS limit for max videos, make place for it.
+        If deferred_commit is true, don't call commit after adding the videos.
+
         :raises ObjectDoesNotExist: if Channel with channel_id does not exist in the database
         :raises ObjectAlreadyExist: if there is already a Video with video_id
         """
@@ -132,7 +139,6 @@ class AbstractRepository(metaclass=ABCMeta):
 
 class SQLiteRepository(AbstractRepository):
     """ SQLite Repository implementation"""
-
     def __init__(self, db_path: str):
         self.con = sqlite3.connect(db_path)
         self.cur = self.con.cursor()
@@ -149,6 +155,10 @@ class SQLiteRepository(AbstractRepository):
             cur.execute(sqlite_statement)
         con.commit()
         con.close()
+
+    def call_commit(self) -> None:
+        """ Calls a commit on the DB """
+        self.con.commit()
 
     def amt_channel_videos(self, channel_id: str, video_type: str = 'all') -> int:
         """ Returns the amount of videos in Channel with channel_id, specified by video_type = 'all', 'new',
@@ -201,9 +211,11 @@ class SQLiteRepository(AbstractRepository):
         return [Channel(*f) for f in found]
 
     def add_video(self, video_id: str, channel_id: str, video_name: str, video_url: str, video_pubdate: str,
-                  video_description: str, video_thumbnail: str, video_new: bool, video_watched: bool) -> None:
+                  video_description: str, video_thumbnail: str, video_new: bool, video_watched: bool, *,
+                  deferred_commit: bool = False) -> None:
         """
         Add a Video to the database, if we are on the SETTINGS limit for max videos, make place for it.
+        If deferred_commit is true, don't call commit after adding the videos.
 
         :raises ObjectDoesNotExist: if Channel with channel_id does not exist in the database
         :raises ObjectAlreadyExist: if there is already a Video with video_id
@@ -219,7 +231,8 @@ class SQLiteRepository(AbstractRepository):
             self.cur.execute('INSERT into videos values(?, ?, ?, ?, ?, ?, ?, ?, ?)',
                              (video_id, channel_id, video_name, video_url, video_pubdate, video_description,
                               video_thumbnail, video_new, video_watched))
-            self.con.commit()
+            if not deferred_commit:
+                self.con.commit()
         except sqlite3.IntegrityError as e:
             if "UNIQUE" in str(e):
                 raise self.ObjectAlreadyExists(video_id)
