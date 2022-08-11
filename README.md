@@ -1,5 +1,5 @@
 # ytsm
-***YTSM*** is a YT Subscription manager. Add, remove, and update any channels you want to follow; watch and keep a
+***YTSM*** is a YT Subscription Manager. Add, remove, and update any channels you want to follow; watch and keep a
 log of the videos you have watched. ***YTSM*** uses YT's RSS feeds, which return information of the newest 15 videos of
 a Channel, to maintain a local database of videos, by saving the last 100 videos for each Channel. The video 
 information can be updated by channel, or all at the same time, once can also get real-time notifications on updates by
