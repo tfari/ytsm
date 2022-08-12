@@ -138,7 +138,11 @@ class VideoDetailBox(Frame):
     def visit_channel_command(self) -> None:
         """ Visit the Channel associated with the VideoDTO """
         if self.video_dto:
-            self.ytsm_controller.visit_channel(self.video_dto.video.channel_id)
+            try:
+                channel_dto = self.ytsm_controller.get_channel_dto_from_id(self.video_dto.video.channel_id)
+                self.ytsm_controller.visit_channel(channel_dto)
+            except YTSMController.ChannelIDNotFound as e:
+                raise NotImplementedError(e)  # TODO
 
     def watch_video_command(self) -> None:
         """ Watch the Video associated with the VideoDTO """

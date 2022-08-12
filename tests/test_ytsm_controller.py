@@ -268,8 +268,10 @@ class TestYTSMController(TestCase):
 
     @mock.patch("webbrowser.open")
     def test_visit_channel(self, mocked_fun):
-        self.ytsmc.visit_channel('666')
-        mocked_fun.assert_called_with('https://youtube.com/channel/666')
+        self._ytsm._add_channel('test', 'Test', '666', 'abc')
+        c = self._ytsm.get_channel('test')
+        self.ytsmc.visit_channel(YTSMController.ChannelDTO(c, 0, 0, 0))
+        mocked_fun.assert_called_with('666')
 
     def test_toggle_mute_channel(self):
         self._ytsm._add_channel('test', 'Test', 'abc', 'thumbnail')

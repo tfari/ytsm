@@ -278,7 +278,7 @@ def visit_channel(name: str):
     """ Visit a Channel's YTSM page """
     visiting_channel: Optional[model.Channel] = _find_and_confirm(name, YTSM.find_channels(name), 'channels')
     if visiting_channel:
-        webbrowser.open(f'https://www.youtube.com/channel/{visiting_channel.idx}')
+        webbrowser.open(visiting_channel.url)
 
 @click.command('mute')
 @click.argument('NAME', type=str)

@@ -122,7 +122,7 @@ class ChannelSelection(Frame):
         """ Visit the Channel selected in channel_treeview """
         channel_dto = self._get_selected_channel_dto()
         if channel_dto:
-            self.ytsm_controller.visit_channel(channel_dto.channel.idx)
+            self.ytsm_controller.visit_channel(channel_dto)
 
     def reload_data(self, *, select_channel_idx: str = '', selection_activated: bool = True) -> None:
         """

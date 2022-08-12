@@ -184,9 +184,9 @@ class YTSMController:
         self.mark_video_watched(video_dto)
 
     @staticmethod
-    def visit_channel(channel_idx: str) -> None:
+    def visit_channel(channel_dto: ChannelDTO) -> None:
         """ Visit a Channel's YT page """
-        webbrowser.open(f'https://youtube.com/channel/{channel_idx}')
+        webbrowser.open(channel_dto.channel.url)
 
     def toggle_mute_channel(self, channel_dto: ChannelDTO) -> None:
         """ Toggle Channel's notify_on status """
