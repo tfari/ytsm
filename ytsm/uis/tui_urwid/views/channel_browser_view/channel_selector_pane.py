@@ -110,11 +110,11 @@ class ChannelSelectorPane(BaseView):
             self.ytsm_controller.remove_channel(self.focused_channel_dto)
             self.bottom_bar.display_message(f'Removed channel: "{self.focused_channel_dto.channel.name}"')
             self.focused_channel_dto = None
-            self.reload_view()
+            self.reload_view(reset_position=True)
         else:
             self.focused_channel_dto = None
             self.bottom_bar.clear()
-            self.master.master.main_frame.focus_part = 'body'
+        self.master.master.main_frame.focus_part = 'body'
 
     def update_channel_command(self, channel_dto: YTSMController.ChannelDTO) -> None:
         """ Update a Channel """
@@ -137,7 +137,7 @@ class ChannelSelectorPane(BaseView):
     def visit_channel_command(self, channel_dto: YTSMController.ChannelDTO) -> None:
         """ Visit the Channel """
         self.focused_channel_dto = channel_dto
-        self.ytsm_controller.visit_channel(channel_idx=self.focused_channel_dto.channel.idx)
+        self.ytsm_controller.visit_channel(channel_dto)
         self.bottom_bar.display_message(f'Visited channel: "{self.focused_channel_dto.channel.name}"')
 
     def toggle_mute_command(self, channel_dto: YTSMController.ChannelDTO) -> None:
