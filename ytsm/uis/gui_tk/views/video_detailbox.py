@@ -13,6 +13,7 @@ from ytsm.settings import SETTINGS
 
 class VideoDetailBox(Frame):
     """ Frame for Video Detail Information """
+
     def __init__(self, master, ytsm_controller: YTSMController, callback_video_alterations: Callable,
                  video_dto: YTSMController.VideoDTO = None):
         super().__init__(master)
@@ -113,15 +114,11 @@ class VideoDetailBox(Frame):
         # get Channel's thumbnail on a separate thread
         if previous_channel_id != self.video_dto.video.channel_id or self.ih.get_id_in_cache(
                 self.video_dto.video.channel_id, self.ih.channel_img_cache) == self.ih.default_channel_image:
-            try:  # Check channel exists!
-                channel_dto = self.ytsm_controller.get_channel_dto_from_id(self.video_dto.video.channel_id)
-            except YTSMController.ChannelIDNotFound as e:
-                raise NotImplementedError(e)  # TODO
-            else:
-                t2 = threading.Thread(target=self.ih.channel_thumbnail_get, args=(channel_dto,))
-                t2.start()
-                self.after(100, self._thumbnail_draw, channel_dto.channel.idx, self.ih.channel_img_cache,
-                           self.channel_image_label)
+            channel_dto = self.ytsm_controller.get_channel_dto_from_id(self.video_dto.video.channel_id)
+            t2 = threading.Thread(target=self.ih.channel_thumbnail_get, args=(channel_dto,))
+            t2.start()
+            self.after(100, self._thumbnail_draw, channel_dto.channel.idx, self.ih.channel_img_cache,
+                       self.channel_image_label)
 
     def _thumbnail_draw(self, object_id: str, using_cache: dict, image_label) -> None:
         """ Draw a thumbnail img from self.ih using_cache cache, into the image_label"""
