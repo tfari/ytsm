@@ -222,11 +222,10 @@ class SQLiteRepository(AbstractRepository):
         """
         # Delete older videos if appropriate
         amt_videos = self.amt_channel_videos(channel_id)
-        if amt_videos >= SETTINGS.advanced_settings.max_videos_per_channel:
-            while amt_videos >= SETTINGS.advanced_settings.max_videos_per_channel:
-                v = self.get_oldest_video_from_channel(channel_id)
-                self._remove_video(v.idx)
-                amt_videos -= 1
+        while amt_videos >= SETTINGS.advanced_settings.max_videos_per_channel:
+            v = self.get_oldest_video_from_channel(channel_id)
+            self._remove_video(v.idx)
+            amt_videos -= 1
 
         # Insert new video
         try:
