@@ -224,6 +224,14 @@ class TestYTSubManager(TestCase):
                           Video('test6', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail', True, False),
                           ], self.ytsm.get_all_videos(channel_id='test'))
 
+        # Test it works when we change to a lower setting
+        SETTINGS.advanced_settings.max_videos_per_channel = 2
+        self.ytsm._add_video('test7', 'test', 'Name', 'Url', '22-02-10', 'Desc', 'Thumbnail')
+        self.assertEqual((2, 2, 2), self.ytsm.get_amt_videos(channel_id='test'))
+        self.assertEqual([Video('test', 'test', 'Name', 'Url', '22-02-06', 'Desc', 'Thumbnail', True, False),
+                          Video('test7', 'test', 'Name', 'Url', '22-02-10', 'Desc', 'Thumbnail', True, False)],
+                         self.ytsm.get_all_videos(channel_id='test'))
+
     def test__add_video_raises_ChannelDoesNotExist(self):
         self.assertRaises(YTSubManager.ChannelDoesNotExist, self.ytsm._add_video, 'test', 'test', 'Name', 'Url',
                           '22-02-01', 'Desc', 'Thumbnail')
