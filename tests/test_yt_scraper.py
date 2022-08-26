@@ -59,11 +59,13 @@ class TestYTScraper(TestCase):
     def test_get_channel_id_and_thumbnail_from_url_lets_raises_escalate(self):
         self.assertRaises(YTScraper.UrlNotYT, self.ytscraper.get_channel_id_and_thumbnail_from_url, 'test.com')
 
-        self.assertRaises(YTScraper.YTUrlNotSupported, self.ytscraper.get_channel_id_and_thumbnail_from_url, 'youtube.com/test')
+        self.assertRaises(YTScraper.YTUrlNotSupported, self.ytscraper.get_channel_id_and_thumbnail_from_url,
+                          'youtube.com/test')
 
         valid_yt_url_for_m_patched_raises = 'youtube.com/channel/test'
         self.ytscraper._get_url = lambda x: self._raiser_helper(YTScraper.YTUrl404('666'))
-        self.assertRaises(YTScraper.YTUrl404, self.ytscraper.get_channel_id_and_thumbnail_from_url, valid_yt_url_for_m_patched_raises)
+        self.assertRaises(YTScraper.YTUrl404, self.ytscraper.get_channel_id_and_thumbnail_from_url,
+                          valid_yt_url_for_m_patched_raises)
 
         self.ytscraper._get_url = lambda x: self._raiser_helper(YTScraper.YTUrlUnexpectedStatusCode('666'))
         self.assertRaises(YTScraper.YTUrlUnexpectedStatusCode,

@@ -10,7 +10,8 @@ from typing import Optional, Any
 
 import click
 
-from ytsm import ytsubmanager, repository, settings, logger, model
+from ytsm import ytsubmanager, settings, logger, model
+from ytsm.repository import sqlite_repository
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = f'{SCRIPT_PATH}/data'
@@ -123,7 +124,7 @@ def ytsm():
                     f'error: "{str(e)}"')
 
     # 6 - Load repo
-    repo = repository.SQLiteRepository(db_path=SQL_REPO_FILEPATH)
+    repo = sqlite_repository.SQLiteRepository(db_path=SQL_REPO_FILEPATH)
 
     # 7 - Load YTSM instance
     YTSM = ytsubmanager.YTSubManager(repository=repo)
@@ -174,7 +175,7 @@ def _factory_restore(all: bool = True, setts: bool = False, db: bool = False) ->
             _success_echo(f'Removing old db file...')
             os.remove(SQL_REPO_FILEPATH)
         _success_echo(f'Creating new db file at {SQL_REPO_FILEPATH}...')
-        repository.SQLiteRepository.create_db(SQL_REPO_FILEPATH)
+        sqlite_repository.SQLiteRepository.create_db(SQL_REPO_FILEPATH)
 
 
 @click.command('notify-update')

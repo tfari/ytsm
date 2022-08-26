@@ -1,7 +1,7 @@
 """ CRUD Interface for accessing the repository and scraper"""
 from typing import Optional
 
-from ytsm.repository import AbstractRepository
+from ytsm.repository.sqlite_repository import AbstractRepository
 from ytsm.scraper.yt_scraper import YTScraper
 from ytsm.model import Channel, Video
 

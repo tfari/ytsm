@@ -1,7 +1,7 @@
 """ Tests for YTSubManager """
 from unittest import TestCase
 from ytsm.ytsubmanager import YTSubManager, YTScraper
-from ytsm.repository import SQLiteRepository
+from ytsm.repository.sqlite_repository import SQLiteRepository
 from ytsm.model import Channel, Video
 from ytsm.settings import SETTINGS, SQLITE_DB_CREATION_STATEMENTS
 
@@ -170,22 +170,24 @@ class TestYTSubManager(TestCase):
 
     def test_remove_channel(self):
         self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
+        self.ytsm._add_channel('test2', 'Name', 'URL', 'thumbnail')
         self.ytsm.remove_channel('test')
         self.assertRaises(YTSubManager.ChannelDoesNotExist, self.ytsm.get_channel, 'test')
+        self.ytsm.get_channel('test2') # Check it didn't delete everything
 
     def test_find_channels(self):
         # Also check case-insensitive
-        self.ytsm._add_channel('1', 'TEST', 'URL', 'thumbnail')
-        self.ytsm._add_channel('2', 'aTest', 'URL', 'thumbnail')
-        self.ytsm._add_channel('3', 'tEStA', 'URL', 'thumbnail')
-        self.ytsm._add_channel('4', 'atEsTa', 'URL', 'thumbnail')
-        self.ytsm._add_channel('5', 'not', 'URL', 'thumbnail')
+        self.ytsm._add_channel('test1', 'TEST', 'URL', 'thumbnail')
+        self.ytsm._add_channel('test2', 'aTest', 'URL', 'thumbnail')
+        self.ytsm._add_channel('test3', 'tEStA', 'URL', 'thumbnail')
+        self.ytsm._add_channel('test4', 'atEsTa', 'URL', 'thumbnail')
+        self.ytsm._add_channel('test5', 'not', 'URL', 'thumbnail')
 
         self.assertEqual([
-            Channel('1', 'TEST', 'URL', True, 'thumbnail'),
-            Channel('2', 'aTest', 'URL', True, 'thumbnail'),
-            Channel('3', 'tEStA', 'URL', True, 'thumbnail'),
-            Channel('4', 'atEsTa', 'URL', True, 'thumbnail')], self.ytsm.find_channels('test'))
+            Channel('test1', 'TEST', 'URL', True, 'thumbnail'),
+            Channel('test2', 'aTest', 'URL', True, 'thumbnail'),
+            Channel('test3', 'tEStA', 'URL', True, 'thumbnail'),
+            Channel('test4', 'atEsTa', 'URL', True, 'thumbnail')], self.ytsm.find_channels('test'))
 
     def test_get_all_channels(self):
         self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')

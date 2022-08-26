@@ -2,7 +2,7 @@
 
 from unittest import TestCase, mock
 from ytsm.ytsubmanager import YTSubManager
-from ytsm.repository import SQLiteRepository
+from ytsm.repository.sqlite_repository import SQLiteRepository
 from ytsm.uis.ytsm_controller import YTSMController
 
 from ytsm.settings import SQLITE_DB_CREATION_STATEMENTS
