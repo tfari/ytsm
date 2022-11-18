@@ -222,7 +222,7 @@ def list_channels(new: bool = False, unwatched: bool = False):
 @click.command('add')
 @click.argument('URL', type=str)
 def add_channel(url: str):
-    """ Add a channel via a yt url. Accepted URL types: "/channel", "/user", "/c", "/watch" """
+    """ Add a channel via a yt url. Accepted URL types: "/channel", "/user", "/c", "/watch", "/@" """
     try:
         c_id = YTSM.add_channel(url)
     except YTSM.BaseYTSMError as e:

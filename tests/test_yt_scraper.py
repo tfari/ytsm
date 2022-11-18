@@ -33,6 +33,8 @@ class TestYTScraper(TestCase):
         self.ytscraper._validate_url('youtube.com/channel/test')
         self.ytscraper._validate_url('youtube.com/user/test')
         self.ytscraper._validate_url('youtube.com/c/test')
+        self.ytscraper._validate_url('youtube.com/@test')
+
 
     def test__validate_url_raises_UrlNotYT(self):
         self.assertRaises(YTScraper.UrlNotYT, self.ytscraper._validate_url, 'test.com/channel/test')

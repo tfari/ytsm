@@ -51,7 +51,7 @@ Channel/Video and prompt you for confirmation if there is more than one option.
     List all channels. If -n is passed show only channels with new videos, if -u is passed show only channels with 
     unwatched videos. 
 * add URL 
-    Add a channel via a yt url. Accepted URL types: "/channel", "/user", "/c", "/watch"
+    Add a channel via a yt url. Accepted URL types: "/channel", "/user", "/c", "/watch", "/@"
 * remove NAME
     Remove a channel by its name.
 * update NAME [-a]

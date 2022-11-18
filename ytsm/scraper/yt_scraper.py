@@ -17,7 +17,8 @@ class YTScraper:
         * Getting and parsing a list of video_information from a channel_id.
     """
     _rss_base_url = 'https://www.youtube.com/feeds/videos.xml?channel_id=%s'
-    _supported_url_types = ['youtube.com/watch?v=', 'youtube.com/channel', 'youtube.com/user/', 'youtube.com/c/']
+    _supported_url_types = ['youtube.com/watch?v=', 'youtube.com/channel', 'youtube.com/user/', 'youtube.com/c/',
+                            'youtube.com/@']
     _channel_id_re = re.compile(r'channelId" content="(?P<channel_id>[\w\-]+)"')
     _channel_thumbnail_re = re.compile(r'"url":"https://yt3(?P<channel_thumbnail>[\w\-./_:]+)=')
 

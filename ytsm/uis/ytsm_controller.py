@@ -124,7 +124,7 @@ class YTSMController:
     def add_channel(self, url: str) -> Channel:
         """
         Add a Channel, returns it.
-        :param url: valid YT channel/video url (/watch?v=, /channel, /user)
+        :param url: valid YT channel/video url (/watch?v=, /channel, /user, /@)
         :raises AddChannelError: if the attempt to add a Channel failed
         """
         try:

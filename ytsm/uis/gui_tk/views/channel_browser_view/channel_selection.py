@@ -149,7 +149,7 @@ class ChannelSelection(Frame):
 
     def add_command(self) -> None:
         """ Add a new Channel """
-        url = simpledialog.askstring(f'Add Channel', f'Input YT url (/watch, /channel, /c, /user):', parent=self)
+        url = simpledialog.askstring(f'Add Channel', f'Input YT url (/watch, /channel, /c, /user, /@):', parent=self)
         if url:
             try:
                 new_c = self.ytsm_controller.add_channel(url)
