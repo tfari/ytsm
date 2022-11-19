@@ -4,7 +4,7 @@ from ytsm.repository.abstract_repository import AbstractRepository
 
 from typing import Optional
 
-from ytsm.model import Channel, Video
+from ytsm.model import Channel, Video, VideoStateType
 from ytsm.settings import SETTINGS, SQLITE_DB_CREATION_STATEMENTS
 
 
@@ -35,17 +35,16 @@ class SQLiteRepository(AbstractRepository):
         self.cur.execute("SELECT id FROM videos")
         return [t[0] for t in self.cur.fetchall()]
 
-    def call_commit(self) -> None:
+    def commit(self) -> None:
         """ Calls a commit on the DB """
         self.con.commit()
 
-    def amt_channel_videos(self, channel_id: str, video_type: str = 'all') -> int:
-        """ Returns the amount of videos in Channel with channel_id, specified by video_type = 'all', 'new',
-        'unwatched' """
-        curs = {'all': 'SELECT COUNT() FROM videos WHERE channel_id=?',
-                'new': 'SELECT COUNT() FROM videos WHERE channel_id=? AND new=TRUE',
-                'unwatched': 'SELECT COUNT() FROM videos WHERE channel_id=? AND watched=FALSE'}
-        self.cur.execute(curs[video_type], (channel_id,))
+    def amt_channel_videos(self, channel_id: str, video_state_type: VideoStateType = VideoStateType.all) -> int:
+        """ Returns the amount of videos in Channel with channel_id, specified by video_state_type """
+        curs = {VideoStateType.all: 'SELECT COUNT() FROM videos WHERE channel_id=?',
+                VideoStateType.new: 'SELECT COUNT() FROM videos WHERE channel_id=? AND new=TRUE',
+                VideoStateType.unwatched: 'SELECT COUNT() FROM videos WHERE channel_id=? AND watched=FALSE'}
+        self.cur.execute(curs[video_state_type], (channel_id,))
         found = self.cur.fetchone()[0]
         return found
 
@@ -72,6 +71,12 @@ class SQLiteRepository(AbstractRepository):
             raise self.ObjectDoesNotExist(channel_id)
         return Channel(*found)
 
+    def get_all_channels(self) -> list[Channel]:
+        """ Get all the Channels from the database """
+        self.cur.execute('SELECT * FROM channels')
+        found = self.cur.fetchall()
+        return [Channel(*f) for f in found]
+
     def remove_channel(self, channel_id: str) -> None:
         """ Remove a Channel from the database """
         self.cur.execute('DELETE FROM channels WHERE id=?', (channel_id,))
@@ -80,12 +85,6 @@ class SQLiteRepository(AbstractRepository):
     def find_channels(self, name_str: str) -> list[Channel]:
         """ Find Channels which names contain name_str, case-insensitive"""
         self.cur.execute('SELECT * FROM channels WHERE UPPER(name) LIKE ?', (f'%{name_str.upper()}%',))
-        found = self.cur.fetchall()
-        return [Channel(*f) for f in found]
-
-    def get_all_channels(self) -> list[Channel]:
-        """ Get all the Channels from the database """
-        self.cur.execute('SELECT * FROM channels')
         found = self.cur.fetchall()
         return [Channel(*f) for f in found]
 
@@ -156,16 +155,6 @@ class SQLiteRepository(AbstractRepository):
         found = self.cur.fetchall()
         return [Video(*f) for f in found]
 
-    def get_all_videos(self, *, channel_id: Optional[str] = None) -> list[Video]:
-        """ Get all the Videos from the database. Optionally look only inside a specific Channel """
-        if not channel_id:
-            self.cur.execute('SELECT * FROM videos')
-        else:
-            self.cur.execute('SELECT * FROM videos WHERE channel_id=?', (channel_id,))
-
-        found = self.cur.fetchall()
-        return [Video(*f) for f in found]
-
     def mark_video_as_old(self, video_id: str) -> None:
         """ Edit Video with video_id to new=False """
         self.cur.execute('UPDATE videos SET new=FALSE WHERE id=?', (video_id,))
@@ -186,23 +175,23 @@ class SQLiteRepository(AbstractRepository):
         self.cur.execute('UPDATE videos SET watched=TRUE WHERE channel_id=?', (channel_id,))
         self.con.commit()
 
-    def get_all_new_videos(self, *, channel_id: Optional[str] = None) -> list[Video]:
-        """ Get all the Videos from the database that have new=True. Optionally look only inside a specific Channel """
-        if not channel_id:
-            self.cur.execute('SELECT * FROM videos WHERE new=TRUE')
-        else:
-            self.cur.execute('SELECT * FROM videos WHERE new=TRUE AND channel_id=?', (channel_id,))
+    def get_videos(self, *, channel_id: Optional[str] = None,
+                   video_state_type: VideoStateType = VideoStateType.all) -> list[Video]:
+        """ Get Videos from the database. Optionally look only inside a specific Channel, or filter them by
+        VideoStateType """
+        select_selector = {
+            VideoStateType.all: 'SELECT * FROM videos',
+            VideoStateType.new: 'SELECT * FROM videos WHERE new=TRUE',
+            VideoStateType.unwatched: 'SELECT * FROM videos WHERE watched=FALSE'
+        }
 
-        found = self.cur.fetchall()
-        return [Video(*f) for f in found]
-
-    def get_all_unwatched_videos(self, *, channel_id: Optional[str] = None) -> list[Video]:
-        """ Get all the Videos from the database that have watched=False. Optionally look only inside a specific
-        Channel """
         if not channel_id:
-            self.cur.execute('SELECT * FROM videos WHERE watched=FALSE')
+            self.cur.execute(select_selector[video_state_type])
         else:
-            self.cur.execute('SELECT * FROM videos WHERE watched=FALSE AND channel_id=?', (channel_id,))
+            if video_state_type == VideoStateType.all:
+                self.cur.execute(f'SELECT * FROM videos WHERE channel_id=?', (channel_id,))
+            else:
+                self.cur.execute(f'{select_selector[video_state_type]} AND channel_id=?', (channel_id,))
 
         found = self.cur.fetchall()
         return [Video(*f) for f in found]

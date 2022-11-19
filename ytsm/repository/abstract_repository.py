@@ -2,20 +2,18 @@
 from typing import Optional
 from abc import ABCMeta, abstractmethod
 
-from ytsm.model import Channel, Video
+from ytsm.model import Channel, Video, VideoStateType
 
 
 class AbstractRepository(metaclass=ABCMeta):
     """ Abstract repository class """
     @abstractmethod
-    def call_commit(self) -> None:
+    def commit(self) -> None:
         """ Calls a commit on the DB """
 
     @abstractmethod
-    def amt_channel_videos(self, channel_id: str, video_type: str = 'all') -> int:
-        """
-        Returns the amount of videos in Channel with channel_id, specified by video_type = 'all', 'new', 'unwatched'
-        """
+    def amt_channel_videos(self, channel_id: str, video_state_type: VideoStateType = VideoStateType.all) -> int:
+        """ Returns the amount of videos in Channel with channel_id, specified by video_state_type """
 
     @abstractmethod
     def add_channel(self, channel_id: str, channel_name: str, channel_uri: str, thumbnail_url: str) -> None:
@@ -32,16 +30,16 @@ class AbstractRepository(metaclass=ABCMeta):
         """
 
     @abstractmethod
+    def get_all_channels(self) -> list[Channel]:
+        """ Get all the Channels from the database """
+
+    @abstractmethod
     def remove_channel(self, channel_id: str) -> None:
         """ Remove a Channel from the database """
 
     @abstractmethod
     def find_channels(self, name_str: str) -> list[Channel]:
         """ Find Channels which names contain name_str, case-insensitive"""
-
-    @abstractmethod
-    def get_all_channels(self) -> list[Channel]:
-        """ Get all the Channels from the database """
 
     @abstractmethod
     def add_video(self, video_id: str, channel_id: str, video_name: str, video_url: str, video_pubdate: str,
@@ -74,10 +72,6 @@ class AbstractRepository(metaclass=ABCMeta):
         inside a specific Channel """
 
     @abstractmethod
-    def get_all_videos(self, *, channel_id: Optional[str] = None) -> list[Video]:
-        """ Get all the Videos from the database. Optionally look only inside a specific Channel """
-
-    @abstractmethod
     def mark_video_as_old(self, video_id: str) -> None:
         """ Edit Video with video_id to new=False """
 
@@ -94,13 +88,10 @@ class AbstractRepository(metaclass=ABCMeta):
         """ Edit all Videos in a Channel to watched=True """
 
     @abstractmethod
-    def get_all_new_videos(self, *, channel_id: Optional[str] = None) -> list[Video]:
-        """ Get all the Videos from the database that have new=True. Optionally look only inside a specific Channel """
-
-    @abstractmethod
-    def get_all_unwatched_videos(self, *, channel_id: Optional[str] = None) -> list[Video]:
-        """ Get all the Videos from the database that have watched=False. Optionally look only inside a specific
-        Channel """
+    def get_videos(self, *, channel_id: Optional[str] = None,
+                   video_state_type: VideoStateType = VideoStateType.all) -> list[Video]:
+        """ Get Videos from the database. Optionally look only inside a specific Channel, or filter them by
+        VideoStateType """
 
     @abstractmethod
     def get_all_videos_by_date_range(self, date_min: str, date_max: str, *,

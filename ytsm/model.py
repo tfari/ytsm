@@ -1,5 +1,13 @@
 """ Model objects """
 from dataclasses import dataclass
+from enum import Enum
+
+class VideoStateType(Enum):
+    """ State of Video """
+    new = "New"
+    unwatched = "Unwatched"
+    old = "Old"
+    all = "All"
 
 @dataclass
 class Channel:

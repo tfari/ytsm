@@ -3,7 +3,7 @@ from typing import Optional
 
 from ytsm.repository.sqlite_repository import AbstractRepository
 from ytsm.scraper.yt_scraper import YTScraper
-from ytsm.model import Channel, Video
+from ytsm.model import Channel, Video, VideoStateType
 
 
 class YTSubManager:
@@ -118,7 +118,7 @@ class YTSubManager:
                                 video['description'], video['thumbnail'], deferred_commit=True)
                 num_new_videos += 1
 
-        self.repository.call_commit()  # Commit changes
+        self.repository.commit()  # Commit changes
         return num_new_videos
 
     def _get_last_video_from_channel(self, channel_id: str) -> Optional[Video]:
@@ -201,7 +201,7 @@ class YTSubManager:
 
     def get_all_videos(self, *, channel_id: Optional[str] = None) -> list[Video]:
         """ Get all the Videos from the database. Optionally look only inside a specific Channel """
-        return self.repository.get_all_videos(channel_id=channel_id)
+        return self.repository.get_videos(channel_id=channel_id)
 
     def mark_video_as_old(self, video_id: str) -> None:
         """ Edit Video with video_id to new=False """
@@ -221,12 +221,12 @@ class YTSubManager:
 
     def get_all_new_videos(self, *, channel_id: Optional[str] = None) -> list[Video]:
         """ Get all the Videos from the database that have new=True. Optionally look only inside a specific Channel """
-        return self.repository.get_all_new_videos(channel_id=channel_id)
+        return self.repository.get_videos(channel_id=channel_id, video_state_type=VideoStateType.new)
 
     def get_all_unwatched_videos(self, *, channel_id: Optional[str] = None) -> list[Video]:
         """ Get all the Videos from the database that have watched=False. Optionally look only inside a specific
         Channel """
-        return self.repository.get_all_unwatched_videos(channel_id=channel_id)
+        return self.repository.get_videos(channel_id=channel_id, video_state_type=VideoStateType.unwatched)
 
     def get_all_videos_by_date_range(self, date_min: str, date_max: str, *,
                                      channel_id: Optional[str] = None) -> list[Video]:
@@ -239,8 +239,8 @@ class YTSubManager:
         Return a tuple of the following counts for Channel with channel_id: (all videos, new videos, unwatched videos)
         """
         return (self.repository.amt_channel_videos(channel_id=channel_id),
-                self.repository.amt_channel_videos(channel_id=channel_id, video_type='new'),
-                self.repository.amt_channel_videos(channel_id=channel_id, video_type='unwatched'))
+                self.repository.amt_channel_videos(channel_id=channel_id, video_state_type=VideoStateType.new),
+                self.repository.amt_channel_videos(channel_id=channel_id, video_state_type=VideoStateType.unwatched))
 
     def _remove_video(self, video_id: str) -> None:
         """
