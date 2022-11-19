@@ -225,24 +225,25 @@ class SQLiteRepository(AbstractRepository):
         Get last Video from Channel with channel_id, based on published date
         :raises ObjectDoesNotExist: if Channel with channel_id does not exist in the database
         """
-        self.get_channel(channel_id)
-        self.cur.execute('SELECT * FROM videos WHERE channel_id=? ORDER BY pubdate DESC', (channel_id,))
-        found = self.cur.fetchone()
-        if not found:
-            return None
-        return Video(*found)
+        return self.__get_last_old_video(channel_id, 'DESC')
 
     def get_oldest_video_from_channel(self, channel_id: str) -> Optional[Video]:
         """
         Get the oldest Video from Channel with channel_id, based on published date
         :raises ObjectDoesNotExist: if Channel with channel_id does not exist in the database
         """
+        return self.__get_last_old_video(channel_id, 'ASC')
+
+    def __get_last_old_video(self, channel_id: str, order: str) -> Optional[Video]:
+        """
+        Get the oldest or latest Video from Channel with channel_id
+        :param order: str = ASC/DESC
+        :raises ObjectDoesNotExist: if Channel with channel_id does not exist in the database
+        """
         self.get_channel(channel_id)
-        self.cur.execute('SELECT * FROM videos WHERE channel_id=? ORDER BY pubdate ASC', (channel_id,))
+        self.cur.execute(f'SELECT * FROM videos WHERE channel_id=? ORDER BY pubdate {order}', (channel_id,))
         found = self.cur.fetchone()
-        if not found:
-            return None
-        return Video(*found)
+        return Video(*found) if found else None
 
     def set_channel_notify_on_status(self, channel_id: str, notify_status: bool) -> None:
         """ Set the Channel with channel_id's notify_on to notify_status """

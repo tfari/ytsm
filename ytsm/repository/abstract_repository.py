@@ -1,6 +1,6 @@
 """ Abstract Repository """
-from abc import ABCMeta, abstractmethod
 from typing import Optional
+from abc import ABCMeta, abstractmethod
 
 from ytsm.model import Channel, Video
 
