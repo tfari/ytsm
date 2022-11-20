@@ -36,3 +36,19 @@ class Video:
         date, time = self.pubdate.split('T')
         time = ':'.join(time.split(':')[:2])
         return f'{date} {time}'
+
+
+@dataclass
+class BaseUpdateResponse:
+    """ Base update response object """
+    channel_id: str
+
+@dataclass
+class ErrorUpdateResponse(BaseUpdateResponse):
+    """ Update response for errors """
+    exception: Exception
+
+@dataclass
+class SuccessUpdateResponse(BaseUpdateResponse):
+    """ Update response for successes """
+    video_list: list[dict]

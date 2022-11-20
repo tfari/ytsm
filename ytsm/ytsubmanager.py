@@ -2,8 +2,8 @@
 from typing import Optional
 
 from ytsm.scraper.yt_scraper import YTScraper
-from ytsm.model import Channel, Video, VideoStateType
 from ytsm.repository.sqlite_repository import AbstractRepository
+from ytsm.model import Channel, Video, VideoStateType, SuccessUpdateResponse, ErrorUpdateResponse
 
 
 class YTSubManager:
@@ -14,7 +14,7 @@ class YTSubManager:
 
     def add_channel(self, url: str) -> str:
         """
-        Add a new channel via its URL, accepted URLs are /channel, /watch , /user, /c, and @ urls
+        Add a new channel via its URL, accepted URLs are /channel, /watch , /user, /c, and /@ urls
 
         :raises ScraperError: if Scrapper has any error
         :raises ChannelAlreadyExists: if Channel with channel_id already exists in the database
@@ -59,12 +59,11 @@ class YTSubManager:
 
         :return int, the number of new videos
         """
-        try:
-            videos = self.scraper.get_video_list(channel_id, use_cache=use_cache)
-        except self.scraper.YTScraperError as e:
-            raise self.ScraperError(f'Error getting video list: {str(type(e))} - {str(e)}')
+        ur = self.scraper.get_video_list(channel_id, use_cache=use_cache)
+        if isinstance(ur, ErrorUpdateResponse):
+            raise self.ScraperError(f'Error getting video list: {str(type(ur.exception))} - {str(ur.exception)}')
         else:
-            return self._update_video_list(videos, channel_id)
+            return self._update_video_list(ur.video_list, channel_id)
 
     def update_all_channels(self) -> dict[str, int]:
         """

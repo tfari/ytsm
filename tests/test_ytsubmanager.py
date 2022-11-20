@@ -2,7 +2,7 @@
 from unittest import TestCase
 from ytsm.ytsubmanager import YTSubManager, YTScraper
 from ytsm.repository.sqlite_repository import SQLiteRepository
-from ytsm.model import Channel, Video
+from ytsm.model import Channel, Video, SuccessUpdateResponse, ErrorUpdateResponse
 from ytsm.settings import SETTINGS, SQLITE_DB_CREATION_STATEMENTS
 
 class TestYTSubManager(TestCase):
@@ -80,20 +80,21 @@ class TestYTSubManager(TestCase):
 
     def test_update_channel(self):
         # Just check it funnels the result from _update_video_list
-        self.ytsm.scraper.get_video_list = lambda x, use_cache: []
+        self.ytsm.scraper.get_video_list = lambda x, use_cache: SuccessUpdateResponse('test', [])
         self.ytsm._update_video_list = lambda x, y: 777
         self.assertEqual(777, self.ytsm.update_channel('test'))
 
     def test_update_channel_raises_ScraperError_on_YTScraper_errors(self):
-        self.ytsm.scraper.get_video_list = lambda x, use_cache: self._raiser_helper(YTScraper.YTUrl404)
+        self.ytsm.scraper.get_video_list = lambda x, use_cache: ErrorUpdateResponse('test', YTScraper.YTUrl404())
         self.assertRaises(YTSubManager.ScraperError, self.ytsm.update_channel, '666')
-        self.ytsm.scraper.get_video_list = lambda x, use_cache: self._raiser_helper(YTScraper.YTUrlUnexpectedStatusCode)
+        self.ytsm.scraper.get_video_list = lambda x, use_cache: ErrorUpdateResponse(
+            'test', YTScraper.YTUrlUnexpectedStatusCode())
         self.assertRaises(YTSubManager.ScraperError, self.ytsm.update_channel, '666')
-        self.ytsm.scraper.get_video_list = lambda x, use_cache: self._raiser_helper(YTScraper.YTScraperError)
+        self.ytsm.scraper.get_video_list = lambda x, use_cache: ErrorUpdateResponse('test', YTScraper.YTScraperError())
         self.assertRaises(YTSubManager.ScraperError, self.ytsm.update_channel, '666')
 
     def test_update_channel_raises_ChannelDoesNotExist(self):
-        self.ytsm.scraper.get_video_list = lambda x, use_cache: []
+        self.ytsm.scraper.get_video_list = lambda x, use_cache: SuccessUpdateResponse('test', [])
         self.assertRaises(YTSubManager.ChannelDoesNotExist, self.ytsm.update_channel, '666')
 
     def test_update_all_channels(self):

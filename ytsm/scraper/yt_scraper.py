@@ -1,8 +1,10 @@
 """ Scrapping class and exceptions. """
 import re
+from typing import Union
 
 from bs4 import BeautifulSoup  # type: ignore
 
+from ytsm.model import BaseUpdateResponse, SuccessUpdateResponse, ErrorUpdateResponse
 from ytsm.scraper.helpers.scrap_wrappers import ScrapWrapper
 from ytsm.scraper.helpers.req_handler import InvalidStatusCode, ReqHandlerError
 
@@ -130,32 +132,30 @@ class YTScraper:
 
         raise self.ChannelInfoParsingError(channel_id)
 
-    def get_video_list(self, channel_id: str, use_cache: bool = False) -> list[dict]:
+    def get_video_list(self, channel_id: str, use_cache: bool = False) -> Union[SuccessUpdateResponse,
+                                                                                ErrorUpdateResponse]:
         """
         Gets a dictionary with Video information from a Channel's id.
-
         If use_cache is True, use the cached XML instead of a GET request.
-
-        :raise YTUrl404: if YT returns 404
-        :raise YTUrlUnexpectedStatusCode: if YT returns something else than 404
-        :raise GettingError : if there is any other requests error
 
         :raises CacheDoesNotHaveKey: If there is no cache under key channel_id when use_cache == True
 
-        :raises VideoListParsingError: If there is a missing key on the XML
-
-        :return: [{'id': str, 'channel_id': str, 'name': str, 'url': str, 'pubdate': str, 'description': str,
-        'thumbnail': str}]
+        :return: Either SuccessUpdateResponse or ErrorUpdateResponse
         """
-        if not use_cache:
-            xml = self._get_url(self._rss_base_url % channel_id)
-        else:
-            try:
-                xml = self.cache[channel_id]
-            except KeyError:
-                raise self.CacheDoesNotHaveKey(channel_id)
+        try:
+            if not use_cache:
+                xml = self._get_url(self._rss_base_url % channel_id)
+            else:
+                try:
+                    xml = self.cache[channel_id]
+                except KeyError:
+                    raise self.CacheDoesNotHaveKey(channel_id)
 
-        return self._extract_video_information_from_xml(xml, channel_id)
+            video_list = self._extract_video_information_from_xml(xml, channel_id)
+            return SuccessUpdateResponse(channel_id, video_list)
+
+        except (YTScraper.GettingError, YTScraper.VideoListParsingError) as e:
+            return ErrorUpdateResponse(channel_id, e)
 
     def get_video_list_multiple(self, channel_ids: list[str]) -> dict[str, list[dict]]:
         """

@@ -35,7 +35,6 @@ class TestYTScraper(TestCase):
         self.ytscraper._validate_url('youtube.com/c/test')
         self.ytscraper._validate_url('youtube.com/@test')
 
-
     def test__validate_url_raises_UrlNotYT(self):
         self.assertRaises(YTScraper.UrlNotYT, self.ytscraper._validate_url, 'test.com/channel/test')
 
@@ -144,7 +143,7 @@ class TestYTScraper(TestCase):
             expected_results = json.loads(json_file.read())
             with open(XML_EXAMPLE_CNN, 'r', encoding='utf-8') as xml_file:
                 self.ytscraper._get_url = lambda x: xml_file.read()
-                self.assertEqual(expected_results, self.ytscraper.get_video_list('UCupvZG-5ko_eiXAupbDfxWw'))
+                self.assertEqual(expected_results, self.ytscraper.get_video_list('UCupvZG-5ko_eiXAupbDfxWw').video_list)
 
         # Using cache
         with open(JSON_EXAMPLE_VIDEOS_CNN, 'r', encoding='utf-8') as json_file:
@@ -152,23 +151,23 @@ class TestYTScraper(TestCase):
             with open(XML_EXAMPLE_CNN, 'r', encoding='utf-8') as xml_file:
                 self.ytscraper.cache['UCupvZG-5ko_eiXAupbDfxWw'] = xml_file.read()
                 self.assertEqual(expected_results, self.ytscraper.get_video_list('UCupvZG-5ko_eiXAupbDfxWw',
-                                                                                 use_cache=True))
+                                                                                 use_cache=True).video_list)
 
     def test_get_video_list_raises_CacheDoesNotHaveKey(self):
         self.assertRaises(YTScraper.CacheDoesNotHaveKey, self.ytscraper.get_video_list, '666', use_cache=True)
 
-    def test_get_video_list_lets_raises_escalate(self):
+    def test_get_video_list_error_update_responses(self):
         self.ytscraper._get_url = lambda x: self._raiser_helper(YTScraper.YTUrl404('666'))
-        self.assertRaises(YTScraper.YTUrl404, self.ytscraper.get_video_list, 'Test')
+        self.assertEqual(YTScraper.YTUrl404, self.ytscraper.get_video_list('Test').exception.__class__)
 
         self.ytscraper._get_url = lambda x: self._raiser_helper(YTScraper.YTUrlUnexpectedStatusCode('666'))
-        self.assertRaises(YTScraper.YTUrlUnexpectedStatusCode, self.ytscraper.get_video_list, 'Test')
+        self.assertEqual(YTScraper.YTUrlUnexpectedStatusCode, self.ytscraper.get_video_list('Test').exception.__class__)
 
         self.ytscraper._get_url = lambda x: self._raiser_helper(YTScraper.GettingError('666'))
-        self.assertRaises(YTScraper.GettingError, self.ytscraper.get_video_list, 'Test')
+        self.assertEqual(YTScraper.GettingError, self.ytscraper.get_video_list('Test').exception.__class__)
 
         self.ytscraper._get_url = lambda x: '<entry></entry>'
-        self.assertRaises(YTScraper.VideoListParsingError, self.ytscraper.get_video_list, 'Test')
+        self.assertEqual(YTScraper.VideoListParsingError, self.ytscraper.get_video_list('Test').exception.__class__)
 
     def test_get_video_list_multiple(self):
         """ Tightly paired with _get_urls_parallel """
