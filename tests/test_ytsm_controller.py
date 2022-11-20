@@ -234,8 +234,10 @@ class TestYTSMController(TestCase):
         self._ytsm._add_channel('test', 'Test', 'abc', 'thumbnail')
         self._ytsm._add_channel('test2', 'Test', 'abc', 'thumbnail')
         self._ytsm._add_channel('test3', 'Test', 'abc', 'thumbnail')
-        self._ytsm.update_all_channels = lambda: {'total': 666, 'test': 1, 'test2': 2, 'test3': 8}
-        expected = {'total': 666, 'details': [('Test', 1), ('Test', 2), ('Test', 8)]}
+        self._ytsm.update_all_channels = lambda: {'total': 666, 'new': {'test': 1, 'test2': 2, 'test3': 8},
+                                                  'errs': {'test4': 11, 'test5': 12, 'test6': 13}}
+        expected = {'total': 666, 'details': [('Test', 1), ('Test', 2), ('Test', 8)],
+                    'errs': {'test4': 11, 'test5': 12, 'test6': 13}}
         self.assertEqual(expected, self.ytsmc.update_all_channels())
 
     def test_update_all_channels_raises_UpdateAllChannelsError(self):

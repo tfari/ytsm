@@ -106,10 +106,20 @@ class TestYTSubManager(TestCase):
             SuccessUpdateResponse('a', []), SuccessUpdateResponse('b', [])
         ])
         self.ytsm._update_video_list = lambda x, y: 388.5  # cute
-        self.assertEqual({'total': 777, 'a': 388.5, 'b': 388.5}, self.ytsm.update_all_channels())
+        self.assertEqual({'total': 777, 'new': {'a': 388.5, 'b': 388.5}, 'errs': {}}, self.ytsm.update_all_channels())
 
     def test_update_all_channels_reports_errors_on_YTScraper_errors(self):
-        self.fail('Not implemented ')
+        self.ytsm.scraper.get_video_list_multiple = lambda x: MultipleUpdateResponse(errors=[
+            ErrorUpdateResponse('c', YTScraper.YTUrl404),
+            ErrorUpdateResponse('d', YTScraper.VideoListParsingError)
+        ], successes=[
+            SuccessUpdateResponse('a', []), SuccessUpdateResponse('b', [])
+        ])
+        self.ytsm._update_video_list = lambda x, y: 388.5  # cute
+
+        self.assertEqual({'total': 777, 'new': {'a': 388.5, 'b': 388.5},
+                          'errs': {'c': YTScraper.YTUrl404, 'd': YTScraper.VideoListParsingError}},
+                         self.ytsm.update_all_channels())
 
     def test_update_all_channels_raises_ChannelDoesNotExist(self):
         self.ytsm.scraper.get_video_list_multiple = lambda x: MultipleUpdateResponse(errors=[], successes=[

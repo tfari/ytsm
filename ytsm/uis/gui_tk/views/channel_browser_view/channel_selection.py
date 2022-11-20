@@ -196,8 +196,12 @@ class ChannelSelection(Frame):
         else:
             amt = update_data['total']
             cns = ", ".join([f'"{ud[0]}"' for ud in update_data['details']])
+            err_dict = update_data['errs']
+            err_msg = "\n".join([f"{self.ytsm_controller.get_channel_dto_from_id(k).channel.name}: "
+                                 f"{err_dict[k]}" for k in err_dict.keys()])
+            err_msg = f'Errors:\n {err_msg}' if err_msg else ''
             messagebox.showinfo('Updated all Channels', f'All channels updated:\n {amt} total new videos in Channels:'
-                                                        f' {cns}')
+                                                        f' {cns}.\n{err_msg}')
             self.reload_data()
 
     def mute_unmute_command(self) -> None:

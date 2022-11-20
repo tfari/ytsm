@@ -166,10 +166,10 @@ class YTSMController:
         except YTSubManager.BaseYTSMError as e:
             raise YTSMController.UpdateAllChannelsError(f'{e}')
         else:
-            response = {'total': update_data['total'], 'details': []}
-            for ud_key in update_data:
+            response = {'total': update_data['total'], 'details': [], 'errs': update_data['errs']}
+            for ud_key in update_data['new']:
                 if ud_key != "total":
-                    response['details'].append((self.ytsm.get_channel(ud_key).name, update_data[ud_key]))
+                    response['details'].append((self.ytsm.get_channel(ud_key).name, update_data['new'][ud_key]))
 
             return response
 

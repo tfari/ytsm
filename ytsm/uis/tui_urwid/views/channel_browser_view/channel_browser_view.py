@@ -116,5 +116,6 @@ class ChannelBrowserView(BaseView):
         else:
             amt = update_data['total']
             cns = ", ".join([f'"{ud[0]}"' for ud in update_data['details']])
-            self.bottom_bar.display_message(f'Updated all channels: {amt} total new videos in channels: {cns}')
+            errs = f'Errors: {len(update_data["errs"])}. ' if update_data['errs'] else ''
+            self.bottom_bar.display_message(f'Updated all channels: {errs}{amt} total new videos in channels: {cns}')
             self.reload_view()

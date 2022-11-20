@@ -66,22 +66,24 @@ class YTSubManager:
         else:
             return self._update_video_list(ur.video_list, channel_id)
 
-    def update_all_channels(self) -> dict[str, int]:
+    def update_all_channels(self) -> dict:
         """
         Update all Channels by scraping and adding the new Videos if any. Uses parallel scraping.
 
         :raises ChannelDoesNotExist: if Channel with channel_id does not exist in the database
 
-        :return dict, {'total': total_new, 'channel_id': amt} -> Only Channel's that have new videos.
+        :return dict, {'total': total_new, 'new': {channel_id: amt}, 'errs: {}} -> Only Channel's that have new videos.
         """
         mur = self.scraper.get_video_list_multiple([c.idx for c in self.get_all_channels()])
-        # TODO: Return error information as well
-        response_dict = {'total': 0}
+        response_dict = {'total': 0, 'new': {}, 'errs': {}}
         for sur in mur.successes:
             amt = self._update_video_list(sur.video_list, sur.channel_id)
             response_dict['total'] += amt
             if amt > 0:
-                response_dict[sur.channel_id] = amt
+                response_dict['new'][sur.channel_id] = amt
+        for eur in mur.errors:
+            response_dict['errs'][eur.channel_id] = eur.exception
+
         return response_dict
 
     def _update_video_list(self, videos_dict_list: list[dict], channel_id: str) -> int:

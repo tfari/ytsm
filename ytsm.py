@@ -192,12 +192,20 @@ def notify_update():
         _error_echo(f'{type(e).__name__}: {str(e)}')
     else:
         if updates['total'] > 0:
-            channels_updated = [YTSM.get_channel(c_id).name for c_id in updates if c_id != "total" and YTSM.get_channel(
+            new = updates['new']
+            channels_updated = [YTSM.get_channel(c_id).name for c_id in new if c_id != "total" and YTSM.get_channel(
                 c_id).notify_on]
             if channels_updated:
                 message = f'New videos on {", ".join(channels_updated)}'
                 subprocess.run(['notify-send', 'YTSM', message])
 
+        # Uncomment to notify update errors
+        # if updates['errs']:
+        #     err_message = ""
+        #     for c_id, e in updates['errs'].items():
+        #         err_message += f'{YTSM.get_channel(c_id).name}: {str(e)}, '
+        #
+        #     subprocess.run(['notify-send', 'YTSM', f'Errors on update: {err_message}'])
 
 @click.command('channels')
 @click.option('--new', '-n', is_flag=True, help='Show only channels with new videos')
@@ -254,12 +262,19 @@ def update_channel(name: str, a: bool) -> None:
         try:
             _success_echo(f'Updating {len(YTSM.get_all_channels())} channels, this might take a while...')
             response = YTSM.update_all_channels()
+            new = response['new']
+            errs = response['errs']
         except YTSM.BaseYTSMError as e:
             _error_echo(f'{type(e).__name__}: {str(e)}')  # Fatal err
         else:
-            list_new = "\n".join([f'\tChannel "{YTSM.get_channel(k).name}" has {response[k]} new videos.' for k in
-                                  response if k != "total"])
+            list_new = "\n".join([f'\tChannel "{YTSM.get_channel(k).name}" has {new[k]} new videos.' for k in new])
             _success_echo(f'Found: {response["total"]} new videos.\n{list_new}')
+
+            if errs:
+                list_errs = "\n".join([f'\tChannel "{YTSM.get_channel(k).name}" failed to update with error: '
+                                       f'{errs[k]}.' for k in errs])
+                _error_echo(f'{len(list_errs)} Errors when updating: {list_errs}')
+
             return None  # Return when finished, no name and -a allowed
 
     if name:
