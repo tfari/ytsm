@@ -2,7 +2,7 @@
 from unittest import TestCase
 from ytsm.ytsubmanager import YTSubManager, YTScraper
 from ytsm.repository.sqlite_repository import SQLiteRepository
-from ytsm.model import Channel, Video, SuccessUpdateResponse, ErrorUpdateResponse
+from ytsm.model import Channel, Video, SuccessUpdateResponse, ErrorUpdateResponse, MultipleUpdateResponse
 from ytsm.settings import SETTINGS, SQLITE_DB_CREATION_STATEMENTS
 
 class TestYTSubManager(TestCase):
@@ -102,20 +102,18 @@ class TestYTSubManager(TestCase):
         self.ytsm.update_all_channels()
         # Just check it funnels the results from _update_video_list
         self.ytsm.scraper.get_video_list_multiple = lambda x: {'a': 'b', 'b': 'a'}
+        self.ytsm.scraper.get_video_list_multiple = lambda x: MultipleUpdateResponse(errors=[], successes=[
+            SuccessUpdateResponse('a', []), SuccessUpdateResponse('b', [])
+        ])
         self.ytsm._update_video_list = lambda x, y: 388.5  # cute
         self.assertEqual({'total': 777, 'a': 388.5, 'b': 388.5}, self.ytsm.update_all_channels())
 
-    def test_update_all_channels_raises_ScraperError_on_YTScraper_errors(self):
-        self.ytsm.scraper.get_video_list_multiple = lambda x: self._raiser_helper(YTScraper.YTUrl404)
-        self.assertRaises(YTSubManager.ScraperError, self.ytsm.update_all_channels)
-        self.ytsm.scraper.get_video_list_multiple = lambda x: self._raiser_helper(
-            YTScraper.YTUrlUnexpectedStatusCode)
-        self.assertRaises(YTSubManager.ScraperError, self.ytsm.update_all_channels)
-        self.ytsm.scraper.get_video_list_multiple = lambda x: self._raiser_helper(YTScraper.YTScraperError)
-        self.assertRaises(YTSubManager.ScraperError, self.ytsm.update_all_channels)
+    def test_update_all_channels_reports_errors_on_YTScraper_errors(self):
+        self.fail('Not implemented ')
 
     def test_update_all_channels_raises_ChannelDoesNotExist(self):
-        self.ytsm.scraper.get_video_list_multiple = lambda x: {'666': [666]}
+        self.ytsm.scraper.get_video_list_multiple = lambda x: MultipleUpdateResponse(errors=[], successes=[
+            SuccessUpdateResponse('666', [])])
         self.assertRaises(YTSubManager.ChannelDoesNotExist, self.ytsm.update_all_channels)
 
     def test__update_video_list(self):

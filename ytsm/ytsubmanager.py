@@ -3,7 +3,8 @@ from typing import Optional
 
 from ytsm.scraper.yt_scraper import YTScraper
 from ytsm.repository.sqlite_repository import AbstractRepository
-from ytsm.model import Channel, Video, VideoStateType, SuccessUpdateResponse, ErrorUpdateResponse
+from ytsm.model import Channel, Video, VideoStateType, SuccessUpdateResponse, ErrorUpdateResponse, \
+    MultipleUpdateResponse
 
 
 class YTSubManager:
@@ -69,23 +70,19 @@ class YTSubManager:
         """
         Update all Channels by scraping and adding the new Videos if any. Uses parallel scraping.
 
-        :raises ScraperError: if Scrapper has any error
         :raises ChannelDoesNotExist: if Channel with channel_id does not exist in the database
 
         :return dict, {'total': total_new, 'channel_id': amt} -> Only Channel's that have new videos.
         """
-        try:
-            response = self.scraper.get_video_list_multiple([c.idx for c in self.get_all_channels()])
-        except self.scraper.YTScraperError as e:
-            raise self.ScraperError(f'Error getting all video lists: {str(type(e))}  - {str(e)}')
-        else:
-            response_dict = {'total': 0}
-            for response_key in response.keys():
-                amt = self._update_video_list(response[response_key], response_key)
-                response_dict['total'] += amt
-                if amt > 0:
-                    response_dict[response_key] = amt
-            return response_dict
+        mur = self.scraper.get_video_list_multiple([c.idx for c in self.get_all_channels()])
+        # TODO: Return error information as well
+        response_dict = {'total': 0}
+        for sur in mur.successes:
+            amt = self._update_video_list(sur.video_list, sur.channel_id)
+            response_dict['total'] += amt
+            if amt > 0:
+                response_dict[sur.channel_id] = amt
+        return response_dict
 
     def _update_video_list(self, videos_dict_list: list[dict], channel_id: str) -> int:
         """

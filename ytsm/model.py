@@ -52,3 +52,10 @@ class ErrorUpdateResponse(BaseUpdateResponse):
 class SuccessUpdateResponse(BaseUpdateResponse):
     """ Update response for successes """
     video_list: list[dict]
+
+
+@dataclass
+class MultipleUpdateResponse:
+    """ Update response for multiple updates """
+    successes: list[SuccessUpdateResponse]
+    errors: list[ErrorUpdateResponse]

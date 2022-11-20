@@ -4,7 +4,7 @@ from typing import Union
 
 from bs4 import BeautifulSoup  # type: ignore
 
-from ytsm.model import BaseUpdateResponse, SuccessUpdateResponse, ErrorUpdateResponse
+from ytsm.model import BaseUpdateResponse, SuccessUpdateResponse, ErrorUpdateResponse, MultipleUpdateResponse
 from ytsm.scraper.helpers.scrap_wrappers import ScrapWrapper
 from ytsm.scraper.helpers.req_handler import InvalidStatusCode, ReqHandlerError
 
@@ -157,25 +157,26 @@ class YTScraper:
         except (YTScraper.GettingError, YTScraper.VideoListParsingError) as e:
             return ErrorUpdateResponse(channel_id, e)
 
-    def get_video_list_multiple(self, channel_ids: list[str]) -> dict[str, list[dict]]:
+    def get_video_list_multiple(self, channel_ids: list[str]) -> MultipleUpdateResponse:
         """
         Gets a video list for multiple Channel id's
 
-        :raise YTUrl404: if YT returns 404
-        :raise YTUrlUnexpectedStatusCode: if YT returns something else than 404
-        :raise GettingError : if there is any other requests error
-
         :raises VideoListParsingError: If there is a missing key on the XML
-
-        :return dict: {channel_id: [{'id': str, 'channel_id': str, 'name': str, 'url': str, 'pubdate': str,
-        'description': str, 'thumbnail': str}]}
         """
         url_list = [self._rss_base_url % c for c in channel_ids]
-        xml_to_url_names = self._get_urls_parallel(url_list)
-        result = {}
-        for key in xml_to_url_names.keys():
-            result[key] = self._extract_video_information_from_xml(xml_to_url_names[key], key)
-        return result
+        xmls, errors = self._get_urls_parallel(url_list)
+
+        errors_list = [ErrorUpdateResponse(channel_id, exception) for channel_id, exception in errors.items()]
+        successes_list = []
+        for key in xmls.keys():
+            try:
+                video_list = self._extract_video_information_from_xml(xmls[key], key)
+            except YTScraper.VideoListParsingError as e:
+                errors_list.append(ErrorUpdateResponse(key, e))
+            else:
+                successes_list.append(SuccessUpdateResponse(key, video_list))
+
+        return MultipleUpdateResponse(successes_list, errors_list)
 
     def _extract_video_information_from_xml(self, xml: str, channel_id: str):
         """
@@ -227,7 +228,7 @@ class YTScraper:
         else:
             return response.text
 
-    def _get_urls_parallel(self, url_list: list[str]) -> dict[str, str]:
+    def _get_urls_parallel(self, url_list: list[str]) -> tuple[dict[str, str], dict[str, Exception]]:
         """
         Wraps and translates calls to self.scrap_wrapper.make_bulk_queries()
 
@@ -235,21 +236,24 @@ class YTScraper:
         :raise YTUrlUnexpectedStatusCode: if YT returns something else than 404
         :raise GettingError : if there is any other requests error
 
-        :return dict: {channel_id: response}
+        :return dict, dict: {channel_id: response}, {chanel-id:
         """
         res, errs = self.scrap_wrapper.make_bulk_queries(url_list)
-        response = {}
+        xmls, errors = {}, {}
         for r in res:
             key = r.url.split('channel_id=')[1]
-            response[key] = r.text
+            xmls[key] = r.text
         for e in errs:
+            key = e['url'].split('channel_id=')[1]
             if e['error'] == InvalidStatusCode:
                 if e['response'].status_code == 404:
-                    raise self.YTUrl404(e['url'])
-                raise self.YTUrlUnexpectedStatusCode(e)
+                    errors[key] = YTScraper.YTUrl404(e['url'])
+                else:
+                    errors[key] = YTScraper.YTUrlUnexpectedStatusCode(e['response'].status_code)
             else:
-                raise self.GettingError(e)
-        return response
+                errors[key] = YTScraper.GettingError(e['error'])
+
+        return xmls, errors
 
     class YTScraperError(Exception):
         """ Base exception for YTScraper errors """

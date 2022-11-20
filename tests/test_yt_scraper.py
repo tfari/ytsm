@@ -3,6 +3,7 @@ import json
 import os.path
 from unittest import TestCase
 from ytsm.scraper.yt_scraper import YTScraper
+from ytsm.model import SuccessUpdateResponse, ErrorUpdateResponse, MultipleUpdateResponse
 from ytsm.scraper.helpers.req_handler import InvalidStatusCode, ReqHandlerError
 
 FILE_PATH = os.path.dirname(os.path.abspath(__file__)) + '/files_for_tests'
@@ -183,31 +184,36 @@ class TestYTScraper(TestCase):
                 """ MP method """
                 self.urls = url_list
                 return [], []
+
         MPR = MonkeyPatchedResponse()
         self.ytscraper.scrap_wrapper.make_bulk_queries = MPR.make_bulk_queries
         self.ytscraper.get_video_list_multiple(['test_1', 'test_2'])
         self.assertEqual(expected, MPR.urls)
 
         # 2 - Check it creates return dictionary right
-        self.ytscraper._get_urls_parallel = lambda x: {'aaa': 1, 'bbb': 2}
+        self.ytscraper._get_urls_parallel = lambda x: ({'aaa': 1, 'bbb': 2}, {})
         self.ytscraper._extract_video_information_from_xml = lambda x, y: 777
-        expected = {'aaa': 777, 'bbb': 777}
-        self.assertEqual(expected, self.ytscraper.get_video_list_multiple(['test']))
+        expected = [SuccessUpdateResponse('aaa', 777), SuccessUpdateResponse('bbb', 777)]
+        self.assertEqual(expected, self.ytscraper.get_video_list_multiple(['test']).successes)
 
-    def test_get_video_list_multiple_lets_raises_escalate(self):
-        self.ytscraper._get_urls_parallel = lambda x: self._raiser_helper(YTScraper.YTUrl404(''))
-        self.assertRaises(YTScraper.YTUrl404, self.ytscraper.get_video_list_multiple, ['666'])
+    def test_get_video_list_multiple_error_update_responses(self):
+        self.ytscraper._get_urls_parallel = lambda x: ({'d': 666},
+                                                       {'a': YTScraper.YTUrl404(),
+                                                        'b': YTScraper.YTUrlUnexpectedStatusCode(),
+                                                        'c': YTScraper.GettingError()})
 
-        self.ytscraper._get_urls_parallel = lambda x: self._raiser_helper(YTScraper.YTUrlUnexpectedStatusCode(''))
-        self.assertRaises(YTScraper.YTUrlUnexpectedStatusCode, self.ytscraper.get_video_list_multiple, ['666'])
-
-        self.ytscraper._get_urls_parallel = lambda x: self._raiser_helper(YTScraper.GettingError(''))
-        self.assertRaises(YTScraper.GettingError, self.ytscraper.get_video_list_multiple, ['666'])
-
-        self.ytscraper._get_urls_parallel = lambda x: {'a': 666}
         self.ytscraper._extract_video_information_from_xml = \
             lambda x, y: self._raiser_helper(YTScraper.VideoListParsingError(''))
-        self.assertRaises(YTScraper.VideoListParsingError, self.ytscraper.get_video_list_multiple, ['666'])
+
+        response = self.ytscraper.get_video_list_multiple(['666'])
+        expected = [('a', YTScraper.YTUrl404),
+                    ('b', YTScraper.YTUrlUnexpectedStatusCode),
+                    ('c', YTScraper.GettingError),
+                    ('d', YTScraper.VideoListParsingError)]
+
+        for i in range(0, 4):
+            self.assertEqual(expected[i][0], response.errors[i].channel_id)
+            self.assertEqual(expected[i][1], response.errors[i].exception.__class__)
 
     def test__extract_video_information_from_xml(self):
         with open(JSON_EXAMPLE_VIDEOS_CNN, 'r', encoding='utf-8') as json_file:
@@ -252,28 +258,34 @@ class TestYTScraper(TestCase):
         self.ytscraper.scrap_wrapper.make_bulk_queries = lambda x: [[MonkeyPatchedResponse('1'),
                                                                     MonkeyPatchedResponse('2'),
                                                                     MonkeyPatchedResponse('3')], []]
-        expected = {'1': 'test', '2': 'test', '3': 'test'}
+        expected = ({'1': 'test', '2': 'test', '3': 'test'}, {})
         self.assertEqual(expected, self.ytscraper._get_urls_parallel(['test']))
 
-    def test__get_urls_parallel_raises_YTUrl404_on_InvalidStatusCode404(self):
+    def test__get_urls_parallel_reports_YTUrl404_on_InvalidStatusCode404(self):
         class MonkeyPatchedStatusCode:
             """ MP """
             def __init__(self):
                 self.status_code = 404
         self.ytscraper.scrap_wrapper.make_bulk_queries = lambda x: [[], [{'error': InvalidStatusCode,
                                                                           'response': MonkeyPatchedStatusCode(),
-                                                                          'url': '666'}]]
-        self.assertRaises(YTScraper.YTUrl404, self.ytscraper._get_urls_parallel, [666])
+                                                                          'url': 'channel_id=test'}]]
+        expected = YTScraper.YTUrl404
+        self.assertEqual(expected, self.ytscraper._get_urls_parallel(['channel_id=test'])[1]['test'].__class__)
 
-    def test__get_urls_parallel_raises_YTUrlUnexpectedStatusCode_on_InvalidStatusCode_NOT_404(self):
+    def test__get_urls_parallel_reports_YTUrlUnexpectedStatusCode_on_InvalidStatusCode_NOT_404(self):
         class MonkeyPatchedStatusCode:
             """ MP """
             def __init__(self):
                 self.status_code = 666
         self.ytscraper.scrap_wrapper.make_bulk_queries = lambda x: [[], [{'error': InvalidStatusCode,
-                                                                          'response': MonkeyPatchedStatusCode()}]]
-        self.assertRaises(YTScraper.YTUrlUnexpectedStatusCode, self.ytscraper._get_urls_parallel, [666])
+                                                                          'response': MonkeyPatchedStatusCode(),
+                                                                          'url': 'channel_id=test'}]]
 
-    def test__get_urls_parallel_raises_GettingError_on_ReqHandlerError(self):
-        self.ytscraper.scrap_wrapper.make_bulk_queries = lambda x: [[], [{'error': ReqHandlerError}]]
-        self.assertRaises(YTScraper.GettingError, self.ytscraper._get_urls_parallel, [666])
+        self.assertEqual(YTScraper.YTUrlUnexpectedStatusCode,
+                              self.ytscraper._get_urls_parallel(['channel_id=test'])[1]['test'].__class__)
+
+    def test__get_urls_parallel_reports_GettingError_on_ReqHandlerError(self):
+        self.ytscraper.scrap_wrapper.make_bulk_queries = lambda x: [[], [{'error': ReqHandlerError,
+                                                                          'url': 'channel_id=test'}]]
+        self.assertEqual(YTScraper.GettingError,
+                          self.ytscraper._get_urls_parallel(['channel_id=test'])[1]['test'].__class__)
