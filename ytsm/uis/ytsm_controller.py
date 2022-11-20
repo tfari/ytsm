@@ -176,7 +176,6 @@ class YTSMController:
     def mark_video_watched(self, video_dto: VideoDTO) -> None:
         """ Mark a Video as watched """
         self.ytsm.mark_video_as_watched(video_dto.video.idx)
-        self.ytsm.mark_video_as_old(video_dto.video.idx)
 
     def watch_video(self, video_dto: VideoDTO) -> None:
         """ Watch a video """

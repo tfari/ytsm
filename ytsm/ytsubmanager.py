@@ -1,9 +1,9 @@
 """ CRUD Interface for accessing the repository and scraper"""
 from typing import Optional
 
-from ytsm.repository.sqlite_repository import AbstractRepository
 from ytsm.scraper.yt_scraper import YTScraper
 from ytsm.model import Channel, Video, VideoStateType
+from ytsm.repository.sqlite_repository import AbstractRepository
 
 
 class YTSubManager:
@@ -41,8 +41,10 @@ class YTSubManager:
             channel_info = self.scraper.get_channel_information(channel_id)
         except self.scraper.YTScraperError as e:
             raise self.ScraperError(f'Error getting channel information: {str(type(e))} - {channel_id}')
+
         # 4 - Create channel
         self._add_channel(channel_info['id'], channel_info['name'], channel_info['url'], thumbnail_url)
+
         # 5 - Update channel
         self.update_channel(channel_id, use_cache=True)
 

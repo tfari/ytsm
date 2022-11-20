@@ -12,10 +12,6 @@ class AbstractRepository(metaclass=ABCMeta):
         """ Calls a commit on the DB """
 
     @abstractmethod
-    def amt_channel_videos(self, channel_id: str, video_state_type: VideoStateType = VideoStateType.all) -> int:
-        """ Returns the amount of videos in Channel with channel_id, specified by video_state_type """
-
-    @abstractmethod
     def add_channel(self, channel_id: str, channel_name: str, channel_uri: str, thumbnail_url: str) -> None:
         """
         Add a Channel to the database
@@ -40,6 +36,10 @@ class AbstractRepository(metaclass=ABCMeta):
     @abstractmethod
     def find_channels(self, name_str: str) -> list[Channel]:
         """ Find Channels which names contain name_str, case-insensitive"""
+
+    @abstractmethod
+    def amt_channel_videos(self, channel_id: str, video_state_type: VideoStateType = VideoStateType.all) -> int:
+        """ Returns the amount of videos in Channel with channel_id, specified by video_state_type """
 
     @abstractmethod
     def add_video(self, video_id: str, channel_id: str, video_name: str, video_url: str, video_pubdate: str,
@@ -81,11 +81,11 @@ class AbstractRepository(metaclass=ABCMeta):
 
     @abstractmethod
     def mark_video_as_watched(self, video_id: str) -> None:
-        """ Edit Video with video_id to watched=True """
+        """ Edit Video with video_id to watched=True and new=False """
 
     @abstractmethod
     def mark_all_videos_watched(self, channel_id: str) -> None:
-        """ Edit all Videos in a Channel to watched=True """
+        """ Edit all Videos in a Channel to watched=True and new=False """
 
     @abstractmethod
     def get_videos(self, *, channel_id: Optional[str] = None,

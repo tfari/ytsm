@@ -1,11 +1,10 @@
 """ SQLite Repository """
 import sqlite3
-from ytsm.repository.abstract_repository import AbstractRepository
-
 from typing import Optional
 
 from ytsm.model import Channel, Video, VideoStateType
 from ytsm.settings import SETTINGS, SQLITE_DB_CREATION_STATEMENTS
+from ytsm.repository.abstract_repository import AbstractRepository
 
 
 class SQLiteRepository(AbstractRepository):
@@ -38,15 +37,6 @@ class SQLiteRepository(AbstractRepository):
     def commit(self) -> None:
         """ Calls a commit on the DB """
         self.con.commit()
-
-    def amt_channel_videos(self, channel_id: str, video_state_type: VideoStateType = VideoStateType.all) -> int:
-        """ Returns the amount of videos in Channel with channel_id, specified by video_state_type """
-        curs = {VideoStateType.all: 'SELECT COUNT() FROM videos WHERE channel_id=?',
-                VideoStateType.new: 'SELECT COUNT() FROM videos WHERE channel_id=? AND new=TRUE',
-                VideoStateType.unwatched: 'SELECT COUNT() FROM videos WHERE channel_id=? AND watched=FALSE'}
-        self.cur.execute(curs[video_state_type], (channel_id,))
-        found = self.cur.fetchone()[0]
-        return found
 
     def add_channel(self, channel_id: str, channel_name: str, channel_url: str, thumbnail_url: str) -> None:
         """
@@ -87,6 +77,15 @@ class SQLiteRepository(AbstractRepository):
         self.cur.execute('SELECT * FROM channels WHERE UPPER(name) LIKE ?', (f'%{name_str.upper()}%',))
         found = self.cur.fetchall()
         return [Channel(*f) for f in found]
+
+    def amt_channel_videos(self, channel_id: str, video_state_type: VideoStateType = VideoStateType.all) -> int:
+        """ Returns the amount of videos in Channel with channel_id, specified by video_state_type """
+        curs = {VideoStateType.all: 'SELECT COUNT() FROM videos WHERE channel_id=?',
+                VideoStateType.new: 'SELECT COUNT() FROM videos WHERE channel_id=? AND new=TRUE',
+                VideoStateType.unwatched: 'SELECT COUNT() FROM videos WHERE channel_id=? AND watched=FALSE'}
+        self.cur.execute(curs[video_state_type], (channel_id,))
+        found = self.cur.fetchone()[0]
+        return found
 
     def add_video(self, video_id: str, channel_id: str, video_name: str, video_url: str, video_pubdate: str,
                   video_description: str, video_thumbnail: str, video_new: bool, video_watched: bool, *,
@@ -166,13 +165,13 @@ class SQLiteRepository(AbstractRepository):
         self.con.commit()
 
     def mark_video_as_watched(self, video_id: str) -> None:
-        """ Edit Video with video_id to watched=True """
-        self.cur.execute('UPDATE videos SET watched=TRUE WHERE id=?', (video_id,))
+        """ Edit Video with video_id to watched=True and new=False """
+        self.cur.execute('UPDATE videos SET watched=TRUE, new=FALSE WHERE id=?', (video_id,))
         self.con.commit()
 
     def mark_all_videos_watched(self, channel_id: str) -> None:
-        """ Edit all Videos in a Channel to watched=True """
-        self.cur.execute('UPDATE videos SET watched=TRUE WHERE channel_id=?', (channel_id,))
+        """ Edit all Videos in a Channel to watched=True and new=False """
+        self.cur.execute('UPDATE videos SET watched=TRUE, new=FALSE WHERE channel_id=?', (channel_id,))
         self.con.commit()
 
     def get_videos(self, *, channel_id: Optional[str] = None,

@@ -409,7 +409,6 @@ def watch_video(name: str):
     watched_video = _find_and_confirm(name, YTSM.find_video_by_name(name), 'videos')
     if watched_video:
         webbrowser.open(watched_video.url)
-        YTSM.mark_video_as_old(watched_video.idx)
         YTSM.mark_video_as_watched(watched_video.idx)
 
 
@@ -421,13 +420,11 @@ def mark_watched(name: str, c: bool = False):
     if c:
         mark_channel_watched_and_old = _find_and_confirm(name, YTSM.find_channels(name), 'channels')
         if mark_channel_watched_and_old:
-            YTSM.mark_all_videos_old(mark_channel_watched_and_old.idx)
             YTSM.mark_all_videos_watched(mark_channel_watched_and_old.idx)
             _success_echo(f'Marked all videos in "{mark_channel_watched_and_old.name}" as watched.')
     else:
         mark_video_watched_and_old = _find_and_confirm(name, YTSM.find_video_by_name(name), 'videos')
         if mark_video_watched_and_old:
-            YTSM.mark_video_as_old(mark_video_watched_and_old.idx)
             YTSM.mark_video_as_watched(mark_video_watched_and_old.idx)
             _success_echo(f'Marked video: "{mark_video_watched_and_old.name}" in channel: '
                           f'"{YTSM.get_channel(mark_video_watched_and_old.channel_id).name}" as watched.')

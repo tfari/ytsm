@@ -373,6 +373,8 @@ class TestYTSubManager(TestCase):
         self.ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm.mark_video_as_watched('test')
         self.assertEqual(True, self.ytsm.get_video('test').watched)
+        self.assertEqual(False, self.ytsm.get_video('test').new)  # Watching a video also makes it old
+
         self.assertEqual(False, self.ytsm.get_video('test2').watched)
 
     def test_mark_all_videos_watched(self):
@@ -381,7 +383,9 @@ class TestYTSubManager(TestCase):
         self.ytsm._add_video('test2', 'test', 'Name', 'Url', '22-02-01', 'Desc', 'Thumbnail')
         self.ytsm.mark_all_videos_watched('test')
         self.assertEqual(True, self.ytsm.get_video('test1').watched)
+        self.assertEqual(False, self.ytsm.get_video('test1').new)  # Watching a video also makes it old
         self.assertEqual(True, self.ytsm.get_video('test2').watched)
+        self.assertEqual(False, self.ytsm.get_video('test2').new)  # Watching a video also makes it old
 
     def test_get_all_new_videos(self):
         self.ytsm._add_channel('test', 'Name', 'URL', 'thumbnail')
