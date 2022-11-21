@@ -98,8 +98,8 @@ class GUIFontScheme(Mapping):
 @dataclasses.dataclass
 class GUISettings:
     """ Dataclass for holding all GUI Settings """
-    colorscheme: Union[GUIColorScheme, dict] = GUIColorScheme()
-    fontscheme: Union[GUIFontScheme, dict] = GUIFontScheme()
+    colorscheme: Union[GUIColorScheme, dict] = dataclasses.field(default_factory=GUIColorScheme)
+    fontscheme: Union[GUIFontScheme, dict] = dataclasses.field(default_factory=GUIFontScheme)
     scheduled_update_activated: bool = False
     scheduled_update_minutes: int = 15
     window_on_top: bool = True
@@ -187,8 +187,8 @@ class TUIKeyBindings(Mapping):
 @dataclasses.dataclass
 class TUISettings:
     """ Dataclass for holding all TUI Settings """
-    colorscheme: Union[TUIColorScheme, dict] = TUIColorScheme()
-    keybindings: Union[TUIKeyBindings, dict] = TUIKeyBindings()
+    colorscheme: Union[TUIColorScheme, dict] = dataclasses.field(default_factory=TUIColorScheme)
+    keybindings: Union[TUIKeyBindings, dict] = dataclasses.field(default_factory=TUIKeyBindings)
 
     def __post_init__(self):
         self.colorscheme = TUIColorScheme(**self.colorscheme)
