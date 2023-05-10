@@ -104,6 +104,7 @@ _NOTICE_: ***YTSM*** uses YT's rss feed endpoint, which is known to be down from
 experience temporal 404 errors when attempting to update channels.
 
 * Channel thumbnail URLs sometimes point to wrong images for a while.
+* European IPs cannot add channels using channel-type URLs, only via video URLs.
 
 ### For GUI on fedora
 On error: 
