@@ -23,6 +23,7 @@ class YTScraper:
                             'youtube.com/@']
     _channel_id_re = re.compile(r'channelId" content="(?P<channel_id>[\w\-]+)"')
     _channel_thumbnail_re = re.compile(r'"url":"https://yt3(?P<channel_thumbnail>[\w\-./_:]+)=')
+    _euro_channel_redirect_re = re.compile(r'https://policies.google.com/technologies/cookies')
 
     def __init__(self):
         self.scrap_wrapper = ScrapWrapper(headers=None)
@@ -83,6 +84,13 @@ class YTScraper:
         match = re.search(self._channel_id_re, html)
         if match:
             return match.group('channel_id')
+
+        # European IPs redirect to a cookie policy page, detect this and raise a EuroCookieError
+        euro_cookie_match = re.search(self._euro_channel_redirect_re, html)
+        if euro_cookie_match:
+            raise self.EuroIPError(f"European IPs cannot add channels using channel-type URLs due to EU cookie "
+                                   f"policies on YT. Try using a video URL of the channel you want to add. ")
+
         raise self.ChannelIDParsingError(input_url)
 
     def _extract_channel_thumbnail_url_from_html(self, html: str, input_url: str) -> str:
@@ -290,3 +298,6 @@ class YTScraper:
 
     class VideoListParsingError(ParsingError):
         """ Parsing error attempting to parse video list """
+
+    class EuroIPError(ParsingError):
+        """ Attempted to add a Channel via a channel-type url while using an Euro IP """
