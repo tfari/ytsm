@@ -92,7 +92,7 @@ class ScrapWrapper(object):
         :return: list, responses
         """
         headers = self.headers if headers is True else None
-
+        
         RH = req_handler.RequestHandler([query_url], req_handler.RequestData(req_handler.GET, headers=headers),
                                         req_handler.RequestErrorData(allow_errors=allow_errors,
                                                                      expected_status_codes=[200]))
