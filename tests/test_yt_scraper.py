@@ -48,7 +48,7 @@ class TestYTScraper(TestCase):
         self.assertEqual({}, self.ytscraper.cache)
 
     def test_get_channel_id_and_thumbnail_from_url(self):
-        self.ytscraper._get_url = lambda x: 'channelId" content="UCupvZG-5ko_eiXAupbDfxWw"extra_text ' \
+        self.ytscraper._get_url = lambda x: '"channelId":"UCupvZG-5ko_eiXAupbDfxWw"extra_text ' \
                                             '"url":"https://yt3.ggpht.com' \
                                             '/FJzSJC_BbfPzbDW0JUF1Jbc5Q3bELn4ntoAmzS0sNlxQEuEXnMwkhI1r1dKpRbnicd60tdwy'\
                                             'rlc=s88-c-k-c0x00ffffff-no-rj"afafaf" '
@@ -88,7 +88,7 @@ class TestYTScraper(TestCase):
 
     def test__extract_channel_id_from_html(self):
         # Simple
-        self.assertEqual('test', self.ytscraper._extract_channel_id_from_html('channelId" content="test"extra_text',
+        self.assertEqual('test', self.ytscraper._extract_channel_id_from_html('"channelId":"test"extra_text',
                                                                               'test'))
 
     def test__extract_channel_id_from_html_raises_ChannelIDParsingError(self):
