@@ -21,7 +21,8 @@ class YTScraper:
     _rss_base_url = 'https://www.youtube.com/feeds/videos.xml?channel_id=%s'
     _supported_url_types = ['youtube.com/watch?v=', 'youtube.com/channel', 'youtube.com/user/', 'youtube.com/c/',
                             'youtube.com/@']
-    _channel_id_re = re.compile(r'"channelId":"(?P<channel_id>[\w\-]+)"')
+    _channel_id_re = re.compile(r'c4TabbedHeaderRenderer":\{"channelId":"(?P<channel_id>[\w\-]+)"')
+    _channel_id_re_second = re.compile(r'"channelId":"(?P<channel_id>[\w\-]+)"')
     _channel_thumbnail_re = re.compile(r'"url":"https://yt3(?P<channel_thumbnail>[\w\-./_:]+)=')
     _euro_channel_redirect_re = re.compile(r'https://policies.google.com/technologies/cookies')
 
@@ -81,9 +82,17 @@ class YTScraper:
         Extract channel_id string from a query's html.
         :raise ChannelIDParsingError: If parsing failed.
         """
+        # Use for debugging changes in yt's html.
+        # with open('debug.html', 'w', encoding='utf-8') as w_file:
+        #     w_file.write(html)
+
         match = re.search(self._channel_id_re, html)
-        if match:
+        if match:  # Channels, need a special one for channels with multiple connected channels
             return match.group('channel_id')
+        else:  # Videos
+            match = re.search(self._channel_id_re_second, html)
+            if match:
+                return match.group('channel_id')
 
         # European IPs redirect to a cookie policy page, detect this and raise a EuroCookieError
         euro_cookie_match = re.search(self._euro_channel_redirect_re, html)

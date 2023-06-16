@@ -87,9 +87,16 @@ class TestYTScraper(TestCase):
                           self.ytscraper.get_channel_id_and_thumbnail_from_url, valid_yt_url_for_m_patched_raises)
 
     def test__extract_channel_id_from_html(self):
-        # Simple
-        self.assertEqual('test', self.ytscraper._extract_channel_id_from_html('"channelId":"test"extra_text',
+        # New special one for multiple connected channel's HTML
+        self.assertEqual('test', self.ytscraper._extract_channel_id_from_html('"c4TabbedHeaderRenderer":{'
+                                                                              '"channelId":"test"extra_text'
+                                                                              '"channelId":"wrong"extra',
                                                                               'test'))
+
+        # Simple
+        self.assertEqual('test', self.ytscraper._extract_channel_id_from_html('ddd"channelId":"test"extra_text',
+                                                                              'test'))
+
 
     def test__extract_channel_id_from_html_raises_ChannelIDParsingError(self):
         self.assertRaises(YTScraper.ChannelIDParsingError, self.ytscraper._extract_channel_id_from_html, '666', 'test')
