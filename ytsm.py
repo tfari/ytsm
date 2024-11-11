@@ -207,6 +207,7 @@ def notify_update():
         #
         #     subprocess.run(['notify-send', 'YTSM', f'Errors on update: {err_message}'])
 
+
 @click.command('channels')
 @click.option('--new', '-n', is_flag=True, help='Show only channels with new videos')
 @click.option('--unwatched', '-u', is_flag=True, help='Show only channels with unwatched videos')

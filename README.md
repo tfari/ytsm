@@ -86,11 +86,12 @@ Channel/Video and prompt you for confirmation if there is more than one option.
 ### Python requirements
 * python 3.9+ (due to type hinting)
 * requests
-* bs4
+* beautifulsoup4
 * click
 * pillow
 * colorama (windows ansi cli coloring)
 * urwid (for the tui, not available on Windows)
+* lxml (for the XML parser)
 
 ### Extra
 * notify-update (For usage of ***YTSM*** with chron or other scheduling of commands. It allows to use the system's 
