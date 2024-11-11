@@ -22,7 +22,7 @@ class YTScraper:
     _supported_url_types = ['youtube.com/watch?v=', 'youtube.com/channel', 'youtube.com/user/', 'youtube.com/c/',
                             'youtube.com/@']
     _channel_id_re = re.compile(r'c4TabbedHeaderRenderer":\{"channelId":"(?P<channel_id>[\w\-]+)"')
-    _channel_id_re_second = re.compile(r'"channelId":"(?P<channel_id>[\w\-]+)"')
+    _channel_id_re_second = re.compile(r'"browseId":"(?P<channel_id>[\w\-]+)"')
     _channel_thumbnail_re = re.compile(r'"url":"https://yt3(?P<channel_thumbnail>[\w\-./_:]+)=')
     _euro_channel_redirect_re = re.compile(r'https://policies.google.com/technologies/cookies')
 

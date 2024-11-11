@@ -10,6 +10,7 @@ FILE_PATH = os.path.dirname(os.path.abspath(__file__)) + '/files_for_tests'
 XML_EXAMPLE_CNN = FILE_PATH + '/example_xml_cnn.xml'
 JSON_EXAMPLE_VIDEOS_CNN = FILE_PATH + '/json_example_videos_cnn.json'
 
+
 class TestYTScraper(TestCase):
     @staticmethod
     def _raiser_helper(ex):
@@ -48,7 +49,7 @@ class TestYTScraper(TestCase):
         self.assertEqual({}, self.ytscraper.cache)
 
     def test_get_channel_id_and_thumbnail_from_url(self):
-        self.ytscraper._get_url = lambda x: '"channelId":"UCupvZG-5ko_eiXAupbDfxWw"extra_text ' \
+        self.ytscraper._get_url = lambda x: '"browseId":"UCupvZG-5ko_eiXAupbDfxWw"extra_text ' \
                                             '"url":"https://yt3.ggpht.com' \
                                             '/FJzSJC_BbfPzbDW0JUF1Jbc5Q3bELn4ntoAmzS0sNlxQEuEXnMwkhI1r1dKpRbnicd60tdwy'\
                                             'rlc=s88-c-k-c0x00ffffff-no-rj"afafaf" '
@@ -94,7 +95,7 @@ class TestYTScraper(TestCase):
                                                                               'test'))
 
         # Simple
-        self.assertEqual('test', self.ytscraper._extract_channel_id_from_html('ddd"channelId":"test"extra_text',
+        self.assertEqual('test', self.ytscraper._extract_channel_id_from_html('ddd"browseId":"test"extra_text',
                                                                               'test'))
 
 
