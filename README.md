@@ -94,7 +94,7 @@ Channel/Video and prompt you for confirmation if there is more than one option.
 * lxml (for the XML parser)
 
 ### Extra
-* notify-update (For usage of ***YTSM*** with chron or other scheduling of commands. It allows to use the system's 
+* notify-update (For usage of ***YTSM*** with chron or other task scheduling. It allows to use the system's 
   notification tray for notifying when there are new Videos)
   * https://vaskovsky.net/notify-send/
   * https://vaskovsky.net/notify-send/linux.html
